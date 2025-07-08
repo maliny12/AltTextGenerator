@@ -1,0 +1,10 @@
+This chart has title 'Bill length and depth'.
+It has the subtitle 'Dimensions for Adelie, Chinstrap, and Gentoo Penguins'.
+It has caption 'Source: Palmer Station LTER / palmerpenguins package'.
+It has x-axis 'Bill depth in mm' with labels 15.0, 17.5 and 20.0.
+It has y-axis 'Bill length in mm' with labels 40, 50 and 60.
+There is a legend indicating colour is used to show species, with 3 levels:
+Adelie shown as very deep purple colour, 
+Chinstrap shown as vivid bluish green colour and 
+Gentoo shown as vivid greenish yellow colour.
+The chart is a set of 342 big solid circle points of which about 95% can be seen.

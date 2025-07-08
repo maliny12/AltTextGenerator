@@ -1,0 +1,21 @@
+This is a histogram, with the title: with the title: Histogram of x
+"x" is marked on the x-axis.
+Tick marks for the x-axis are at: -3, -2, -1, 0, 1, 2, and 3 
+There are a total of 1000 elements for this variable.
+Tick marks for the y-axis are at: 0, 50, 100, 150, and 200 
+It has 14 bins with equal widths, starting at -3.5 and ending at 3.5 .
+The mids and counts for the bins are:
+mid = -3.25  count = 1 
+mid = -2.75  count = 7 
+mid = -2.25  count = 13 
+mid = -1.75  count = 42 
+mid = -1.25  count = 88 
+mid = -0.75  count = 169 
+mid = -0.25  count = 202 
+mid = 0.25  count = 175 
+mid = 0.75  count = 131 
+mid = 1.25  count = 115 
+mid = 1.75  count = 35 
+mid = 2.25  count = 17 
+mid = 2.75  count = 4 
+mid = 3.25  count = 1

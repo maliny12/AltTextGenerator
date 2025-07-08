@@ -5,22 +5,21 @@ library(ggplot2)
 library(gridExtra)
 library(palmerpenguins)
 
-sysprompt <- "You are a researcher looking to write alt text for your plot. Based on the available information, what you can learn from the plot? State any relationship, clusters or any interesting thing about the data.Do not include the phrase 'Alt text:' at the beginning. Be concise and sound natural"
+sysprompt <- readLines("prompt.txt")
 
-# Simple data ------------------
+# Example 1 ---------------------------------
 
 x = rnorm(1000)
 
 example1 <- capture.output(VI(hist(x)))
-# writeLines(brailleR,"breilleR_output.txt" )
-# a <-readLines("breilleR_output.txt")
+#writeLines(example1,"breilleR_example1.txt" )
+
 
 
 chat <- chat_openai()
 chat$chat(paste0(sysprompt,example1))
 
-# Grid plot ---------------------
-
+# Example 2----------------------------------
 
 example2 <- capture.output(
   VI(
@@ -36,8 +35,12 @@ example2 <- capture.output(
     scale_color_viridis_d()
   )
 )
+#writeLines(example2,"breilleR_example2.txt" )
 
 chat$chat(paste0(sysprompt,example2),
-          content_image_file("example2.png"))
+          content_image_file("files/example2.png"))
+
+
+# --------------------------------------------
 
 
