@@ -30,8 +30,8 @@ ui <- fluidPage(
         div(id = "spinner", class = "spinner-border", role = "status"),
         tags$hr(),
         fluidRow(
-          column(11, textAreaInput("user_message",label = NULL,  placeholder = "Your R code goes here...", width = "100%")),
-          column(1, actionButton("send_message",label = NULL , icon = icon("paper-plane"), class = "button"))
+          column(11, textAreaInput("user_code",label = NULL,  placeholder = "Your R code goes here...", width = "100%")),
+          column(1, actionButton("send_request",label = NULL , icon = icon("paper-plane"), class = "button"))
         )
       )
     )
@@ -42,35 +42,40 @@ ui <- fluidPage(
 
 server <- function(input, output) {
 
+  # Set up a reactive data frame
+
   chat_data <- reactiveVal(data.frame(source = character(0),
                                       message = character(0),
                                       stringsAsFactors = FALSE))
 
-  observeEvent(input$send_message, {
-    req(input$user_message, input$api_key)
+  observeEvent(input$send_request, {
+    req(input$user_code, input$api_key)
 
     new_data <- data.frame(source = "User",
-                           message = input$user_message, stringsAsFactors = FALSE)
+                           message = input$user_code, stringsAsFactors = FALSE)
 
     chat_data(rbind(chat_data(), new_data))
-    disable("send_message")
+    disable("send_request")
     runjs("document.getElementById('spinner').style.display = 'block';")
 
     messages <- list()
     if (nzchar(input$sysprompt)) {
       messages <- append(messages, list(list(role = "system", content = input$sysprompt)))
     }
-    messages <- append(messages, list(list(role = "user", content = input$user_message)))
+    messages <- append(messages, list(list(role = "user", content = input$user_code)))
 
     body_list <- list(
-      model = "gpt-4o",
+      model = "gpt-4.1",
       messages = messages,
       top_p = 1
     )
 
     # Process the r code
 
-    # Send HTTP to OpenAI
+
+
+
+    # Send HTTP request to OpenAI
 
 
 
