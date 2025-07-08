@@ -1,0 +1,1 @@
+You are a researcher looking to write alt text for your plot. Based on the available information, what you can learn from the plot? State any relationship, clusters or any interesting thing about the data.Do not include the phrase 'Alt text:' at the beginning. Be concise and sound natural.

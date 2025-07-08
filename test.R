@@ -5,7 +5,7 @@ library(ggplot2)
 library(gridExtra)
 library(palmerpenguins)
 
-sysprompt <- "based on this information what can you learn about the plot. Give me only the overall summary as alt-text"
+sysprompt <- "You are a researcher looking to write alt text for your plot. Based on the available information, what you can learn from the plot? State any relationship, clusters or any interesting thing about the data.Do not include the phrase 'Alt text:' at the beginning. Be concise and sound natural"
 
 # Simple data ------------------
 
@@ -22,7 +22,7 @@ chat$chat(paste0(sysprompt,example1))
 # Grid plot ---------------------
 
 
-capture.output(
+example2 <- capture.output(
   VI(
     ggplot(penguins, aes(bill_depth_mm, bill_length_mm, color = species)) +
     geom_point() +
@@ -36,3 +36,8 @@ capture.output(
     scale_color_viridis_d()
   )
 )
+
+chat$chat(paste0(sysprompt,example2),
+          content_image_file("example2.png"))
+
+
