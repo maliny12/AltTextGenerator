@@ -4,6 +4,7 @@ library(ellmer)
 library(ggplot2)
 library(gridExtra)
 library(palmerpenguins)
+library(usethis)
 
 sysprompt <- readLines("prompt.txt")
 
@@ -14,9 +15,8 @@ x = rnorm(1000)
 example1 <- capture.output(VI(hist(x)))
 #writeLines(example1,"breilleR_example1.txt" )
 
-
-
-chat <- chat_openai()
+usethis::edit_r_environ()
+chat <- chat_openai(api_key = OPENAI_API_KEY)
 chat$chat(paste0(sysprompt,example1))
 
 # Example 2----------------------------------
@@ -42,5 +42,3 @@ chat$chat(paste0(sysprompt,example2),
 
 
 # --------------------------------------------
-
-

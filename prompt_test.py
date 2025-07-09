@@ -27,13 +27,13 @@ client = OpenAI(
 
 response = client.responses.create(
     model="gpt-4.1",
-    instructions="You are a researcher that talk very concisely",
+    instructions= "You are a researcher that talk very concisely",
     # input = str(sysprompt) + str(data)
     input=[
         {
             "role": "user",
             "content": [
-                { "type": "input_text", "text": "what's in this image?" },
+                { "type": "input_text", "text": str(sysprompt) + str(data) },
                 {
                     "type": "input_image",
                     "image_url": f"data:image/jpeg;base64,{base64_image}",
