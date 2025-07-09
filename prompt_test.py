@@ -1,11 +1,13 @@
 import os
 from openai import OpenAI
+from dotenv import load_dotenv
 
 with open('files/breilleR_example1.txt', 'r') as file:
     data = file.read().replace('\n', '')
 
+load_dotenv("environment.env")
 client = OpenAI(
-    api_key= "..."
+    api_key= os.getenv("OPENAI_API_KEY")
 )
 
 response = client.responses.create(
@@ -15,3 +17,4 @@ response = client.responses.create(
 )
 
 print(response.output_text)
+
