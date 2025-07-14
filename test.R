@@ -15,10 +15,12 @@ x = rnorm(1000)
 example1 <- capture.output(VI(hist(x)))
 #writeLines(example1,"breilleR_example1.txt" )
 
-usethis::edit_r_environ()
-chat <- chat_openai(api_key = OPENAI_API_KEY)
+readRenviron(".Renviron")
+chat <- chat_openai(api_key = Sys.getenv("OPENAI_API_KEY"))
 chat$chat(paste0(sysprompt,example1))
-
+chat$chat(paste0(sysprompt,example1))
+chat$chat(paste0(sysprompt,example1))
+chat$chat("I like version 3 the best. It is  the most descriptive. Give me another variation of this.")
 # Example 2----------------------------------
 
 example2 <- capture.output(
