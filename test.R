@@ -6,9 +6,15 @@ library(gridExtra)
 library(palmerpenguins)
 library(usethis)
 
-sysprompt <- readLines("prompt.txt")
 
-# Example 1 ---------------------------------
+# Set up ---------------------------------
+sysprompt <- readLines("prompt.txt")
+readRenviron(".Renviron")
+chat <- chat_openai(api_key = Sys.getenv("OPENAI_API_KEY"))
+
+# All examples are from Dataviz- Claus Wilke
+# Link: https://github.com/clauswilke/dataviz
+#
 
 x = rnorm(1000)
 
@@ -18,9 +24,7 @@ example1 <- capture.output(VI(hist(x)))
 readRenviron(".Renviron")
 chat <- chat_openai(api_key = Sys.getenv("OPENAI_API_KEY"))
 chat$chat(paste0(sysprompt,example1))
-chat$chat(paste0(sysprompt,example1))
-chat$chat(paste0(sysprompt,example1))
-chat$chat("I like version 3 the best. It is  the most descriptive. Give me another variation of this.")
+
 # Example 2----------------------------------
 
 example2 <- capture.output(
