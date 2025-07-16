@@ -37,7 +37,7 @@ ex1 <- as.data.frame(Titanic) %>% mutate(surv = ifelse(Survived == "No", "died",
       linewidth = 1.)
   )
 
-client_responses(VI(ex1), "files/ex1.png")
+client_responses(VI(ex1), "files/ex3.png")
 
 # --------------------------------------------
 

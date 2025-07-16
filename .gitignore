@@ -8,3 +8,4 @@ environment.env
 .venv/
 venv/
 .Renviron
+.lintr.R

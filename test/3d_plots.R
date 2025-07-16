@@ -97,3 +97,6 @@ ex7 <- plot_grid(ggdraw() +  draw_image("files/1AKO-cropped.png"),
          legend, ncol = 1, rel_heights = c(16, 4)) # nolint # nolint
 
 client_responses(VI(ex7), "files/ex7.png")
+
+
+

@@ -15,10 +15,10 @@ ui <- fluidPage(
         class = "sidebar-panel",
         h3("Alt-Text Generator"),
         tags$hr(style = "margin-top: 10px; margin-bottom: 20px;"),
-        textInput("api_key", label = NULL, placeholder = "Enter OpenAI API keys"),
+        textInput("api_key", label = NULL, placeholder = "Enter OpenAI API keys"), # nolint # nolint
 
         h5("System Prompt"),
-        textAreaInput("sysprompt", NULL, height = "80px", placeholder = "Based on this information what can you learn about the plot. Give me only the overall summary as alt-text")
+        textAreaInput("sysprompt", NULL, height = "80px", placeholder = "Based on this information what can you learn about the plot. Give me only the overall summary as alt-text") # nolint # nolint
       )
     ),
     column(
@@ -30,8 +30,8 @@ ui <- fluidPage(
         div(id = "spinner", class = "spinner-border", role = "status"),
         tags$hr(),
         fluidRow(
-          column(11, textAreaInput("user_code",label = NULL,  placeholder = "Your R code goes here...", width = "100%")),
-          column(1, actionButton("send_request",label = NULL , icon = icon("paper-plane"), class = "button"))
+          column(11, textAreaInput("user_code",label = NULL,  placeholder = "Your R code goes here...", width = "100%")), # nolint # nolint
+          column(1, actionButton("send_request",label = NULL , icon = icon("paper-plane"), class = "button")) # nolint
         )
       )
     )
@@ -60,11 +60,11 @@ server <- function(input, output) {
 
     messages <- list()
     if (nzchar(input$sysprompt)) {
-      messages <- append(messages, list(list(role = "system", content = input$sysprompt)))
+      messages <- append(messages, list(list(role = "system", content = input$sysprompt))) # nolint # nolint
     }
-    messages <- append(messages, list(list(role = "user", content = input$user_code)))
+    messages <- append(messages, list(list(role = "user", content = input$user_code))) # nolint
 
-    body_list <- list(
+    body_list <- list( # nolint
       model = "gpt-4.1",
       messages = messages,
       top_p = 1

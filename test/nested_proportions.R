@@ -178,7 +178,7 @@ ex5 <-  ggplot(bridges_tidy) +
 
 # ggsave("files/ex5.png")
 
-# Don't know that this is a mosiac plot
+
 client_responses(VI(ex5), "files/ex5.png")
 
 
