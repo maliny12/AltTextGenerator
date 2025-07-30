@@ -3,3 +3,4 @@ You must describe visible patterns, relationships, or clusters and include your 
 Do not begin with phrase "Alt-text:" or "**Iteration**". Be concise and use natural language.
 If the user prompt is vague or missing important details, make reasonable assumptions to fill in the gap and mention those assumptions.
 Generate 3 variations of alt-text per graph.
+If there's no image provide, you should generate alt-text based solely on the BreilleR input.

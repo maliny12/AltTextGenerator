@@ -25,6 +25,9 @@ readRenviron(".Renviron")
 chat <- chat_openai(api_key = Sys.getenv("OPENAI_API_KEY"))
 chat$chat(paste0(sysprompt,example1))
 
+
+
+
 # Example 2----------------------------------
 
 example2 <- capture.output(
