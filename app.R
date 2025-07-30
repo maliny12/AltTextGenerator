@@ -44,6 +44,21 @@ ui <- fluidPage(
         margin-left: 0;
         }
 
+        .form-control {
+        height: auto;
+        font-family: monospace;
+        font-size: 1.2rem;
+        }
+
+        .input-group-btn {
+        font-family: monospace;
+        font-size: 1.2rem;
+        }
+
+        #api_key {
+        font-family: monospace;
+        font-size: 1.2rem;
+        }
 
         #settings_panel {
         position: absolute;
@@ -173,7 +188,7 @@ ui <- fluidPage(
                     style="min-width: 300px",
                     id = "settings_panel",
                     h5("Temperature"),
-                    sliderInput("temperature", label = NULL, min = 0.00, max = 2.00, value = 1.00),
+                    sliderInput("temperature", label = NULL, min = 0.00, max = 2.00, value = 1.00, step = 0.1),
                     h5("Max Tokens"),
                     sliderInput("max_tokens", label = NULL, min = 1, max = 32000, value = 2048),
                     h5("Top P"),
@@ -185,7 +200,7 @@ ui <- fluidPage(
           ),
           fluidRow(
             h5("System Instruction"),
-            textAreaInput("sysinstruct", NULL, height = "80px", placeholder = "Talk like a pirate...")
+            textAreaInput("sysinstruct", NULL, height = "80px", placeholder = "Describe desired model behavior (keept it concise, include the context )")
           ),
           fluidRow(
             h5("Choose Image"),
@@ -194,11 +209,17 @@ ui <- fluidPage(
           fluidRow(
             h5("R Code"),
             textAreaInput("code_input", NULL, height = "80px",
-                          placeholder = "ggplot(data = mpg) +
-    geom_point(
-    mapping = aes(x = displ,y = hwy)) +
-    hello ()
-                  ")
+                          placeholder = "aus_temp |>
+  ggplot(aes(
+      x_major = long, y_major = lat,
+      x_minor = month, ymin_minor = tmin,
+      ymax_minor = tmax)) +
+  geom_sf(
+      data = ozmaps::abs_ste,
+      inherit.aes = FALSE) +
+  add_glyph_boxes() +
+  add_ref_lines() +
+  geom_glyph_ribbon()")
           ),
         )
       ),
