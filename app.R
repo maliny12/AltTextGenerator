@@ -5,6 +5,7 @@ library(shinyjs)
 library(magrittr)
 library(base64enc)
 library(shinycssloaders)
+library(magick)
 source("_common.R")
 
 # can just add css file in a folder
@@ -113,34 +114,34 @@ ui <- fluidPage(
       }
 
       #chat_history {
-  display: flex;
-  flex-direction: column;
-  margin: 0 5rem;
-}
+    display: flex;
+    flex-direction: column;
+     margin: 0 5rem;
+    }
 
-.user-chat {
-  /* margin-left: 20%; */
-    padding: 1em;
-  border: 1px solid white;
-  background-color: #323232d9;
-  border-radius: 10px;
-  width: fit-content;
-  align-self: flex-end;
-  max-width: 80%;
-  margin-top: 1rem;
-}
+    .user-chat {
+      /* margin-left: 20%; */
+        padding: 1em;
+      border: 1px solid white;
+      background-color: #323232d9;
+      border-radius: 10px;
+      width: fit-content;
+      align-self: flex-end;
+      max-width: 80%;
+      margin-top: 1rem;
+    }
 
-.ai-chat {
-  /* margin-right: 20%; */
-    padding: 1em;
-  border: 1px solid white;
-  background-color: steelblue;
-  border-radius: 10px;
-  margin-top: 1rem;
-  max-width: 80%;
-  width: fit-content;
-  align-self: flex-start;
-}
+    .ai-chat {
+      /* margin-right: 20%; */
+        padding: 1em;
+      border: 1px solid white;
+      background-color: steelblue;
+      border-radius: 10px;
+      margin-top: 1rem;
+      max-width: 80%;
+      width: fit-content;
+      align-self: flex-start;
+    }
 
   ")),
   tags$head(
@@ -200,7 +201,7 @@ ui <- fluidPage(
           ),
           fluidRow(
             h5("System Instruction"),
-            textAreaInput("sysinstruct", NULL, height = "80px", placeholder = "Describe desired model behavior (keept it concise, include the context )")
+            textAreaInput("sysinstruct", NULL, height = "80px", placeholder = "Describe desired model behavior (keept it concise, include the context ... )")
           ),
           fluidRow(
             h5("Choose Image"),
