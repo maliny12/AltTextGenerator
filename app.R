@@ -6,6 +6,7 @@ library(magrittr)
 library(base64enc)
 library(shinycssloaders)
 library(magick)
+library(bslib)
 source("_common.R")
 
 # can just add css file in a folder
@@ -61,6 +62,10 @@ ui <- fluidPage(
         font-size: 1.2rem;
         }
 
+        #input-group-btn {
+        font-size = 1.2rem;
+        }
+
         #settings_panel {
         position: absolute;
         right: 0;
@@ -79,6 +84,42 @@ ui <- fluidPage(
         height: 22em !important;
         }
 
+        .tooltips>h5 {
+         position: relative;
+         display: inline-block;
+         cursor: help;
+         padding-bottom: 2px;
+         border-bottom: 2px solid transparent;
+
+        }
+
+        .selectize-dropdown .selected {
+         background-color: #2c9373;
+        }
+
+        .tooltips .tooltiptext {
+         visibility: hidden;
+         width: fit-content;
+         background-color: #555;
+         color: #fff;
+         text-align: center;
+         padding: 5px;
+         border-radius: 10px;
+
+         position: absolute;
+         z-index: 999;
+
+        }
+
+        .tooltips:hover .tooltiptext {
+         visibility: visible;
+         opacity: 0.99;
+        }
+
+        .tooltips:hover h5 {
+         border-bottom: 2px dotted #2c9373;
+        }
+
       .setting-summary {
         font-family: monospace;
         font-size: 14px;
@@ -88,6 +129,10 @@ ui <- fluidPage(
 
       .model_dropdown {
         left: 0;
+      }
+
+      .btn.btn-default.btn-file{
+      font-size: 1.2rem;
       }
 
       .model_config {
@@ -125,7 +170,7 @@ ui <- fluidPage(
       border: 1px solid white;
       background-color: #323232d9;
       border-radius: 10px;
-      width: fit-content;
+      width: 120px;
       align-self: flex-end;
       max-width: 80%;
       margin-top: 1rem;
@@ -154,11 +199,19 @@ ui <- fluidPage(
           class = "control-panel",
           tags$hr(style = "margin-top: 10px; margin-bottom: 20px;"),
           fluidRow(
-            h5("OpenAI Api Key"),
+            tags$div(
+              class = "tooltips",
+              h5("OpenAI Api Key"),
+              tags$span(class = "tooltiptext", "Your secret API key")
+            ),
             textInput("api_key", label = NULL, placeholder = "Enter OpenAI API keys")
           ),
           fluidRow(
-            h5("Model"),
+            tags$div(
+              class = "tooltips",
+              h5("Model"),
+              tags$span(class = "tooltiptext", "Your secret API key")
+            ),
             div(
               class = "model_dropdown",
               fluidRow(
@@ -188,11 +241,23 @@ ui <- fluidPage(
                   div(
                     style="min-width: 300px",
                     id = "settings_panel",
-                    h5("Temperature"),
+                    tags$div(
+                      class = "tooltips",
+                      h5("Temperature"),
+                      tags$span(class = "tooltiptext", "Controls the randomness of the output. Lower values make the model more focused and deterministic, producing more predictable results. Higher values make the output more creative and diverse. ")
+                    ),
                     sliderInput("temperature", label = NULL, min = 0.00, max = 2.00, value = 1.00, step = 0.1),
-                    h5("Max Tokens"),
+                    tags$div(
+                      class = "tooltips",
+                      h5("Max Tokens"),
+                      tags$span(class = "tooltiptext", "Specifies the maximum number of tokens allowed in the combined input and output. A token can be as short as one character or as long as one word. This limits the length of the model’s response.")
+                    ),
                     sliderInput("max_tokens", label = NULL, min = 1, max = 32000, value = 2048),
-                    h5("Top P"),
+                    tags$div(
+                      class = "tooltips",
+                      h5("Top P"),
+                      tags$span(class = "tooltiptext", "Controls the diversity of the output by limiting choices to the top probability mass. Lower values narrow the focus, leading to more deterministic responses.")
+                    ),
                     sliderInput("top_p", label = NULL, min = 0.00, max = 1.00, value = 1.00)
                   )
                 )
@@ -200,15 +265,28 @@ ui <- fluidPage(
             )
           ),
           fluidRow(
-            h5("System Instruction"),
+            tags$div(
+              class = "tooltips",
+              h5("System Instruction"),
+              tags$span(class = "tooltiptext", "Your secret API key")
+            ),
             textAreaInput("sysinstruct", NULL, height = "80px", placeholder = "Describe desired model behavior (keept it concise, include the context ... )")
           ),
           fluidRow(
-            h5("Choose Image"),
+            class = "image-input-row",
+            tags$div(
+              class = "tooltips",
+              h5("Choose Image"),
+              tags$span(class = "tooltiptext", "Your secret API key")
+            ),
             fileInput("image_input", label = NULL, accept ="image/png")
           ),
           fluidRow(
-            h5("R Code"),
+            tags$div(
+              class = "tooltips",
+              h5("R Code"),
+              tags$span(class = "tooltiptext", "Your secret API key")
+            ),
             textAreaInput("code_input", NULL, height = "80px",
                           placeholder = "aus_temp |>
   ggplot(aes(
@@ -366,6 +444,7 @@ server <- function(input, output, session) {
   observeEvent(input$show_setting, {
     toggle(id = "settings_panel", anim = TRUE)
   })
+
 
 }
 
