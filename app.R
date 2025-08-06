@@ -33,10 +33,6 @@ ui <- fluidPage(
        padding: 0;
         }
 
-        .shiny-html-output {
-        min-height: 76vh !important;
-        }
-
         .shiny-input-container:not(.shiny-input-container-inline) {
          width: 100% !important;
         }
@@ -64,6 +60,10 @@ ui <- fluidPage(
 
         #input-group-btn {
         font-size = 1.2rem;
+        }
+
+        #system_description {
+        color: grey;
         }
 
         #settings_panel {
@@ -97,7 +97,7 @@ ui <- fluidPage(
          background-color: #2c9373;
         }
 
-        .tooltips .tooltiptext {
+        .tooltiptext {
          visibility: hidden;
          width: fit-content;
          background-color: #555;
@@ -111,9 +111,16 @@ ui <- fluidPage(
 
         }
 
+        .col-sm-2 .tooltiptext {
+         margin-left: 10px;
+         left: 100%;
+         width: 200px;
+        }
+
         .tooltips:hover .tooltiptext {
          visibility: visible;
          opacity: 0.99;
+         display: block;
         }
 
         .tooltips:hover h5 {
@@ -153,15 +160,15 @@ ui <- fluidPage(
 
       .shiny-html-output {
       overflow-y: auto;
-      min-height: 10vh;
       max-height: 65vh;
       /*text-align: center;*/
       }
 
       #chat_history {
-    display: flex;
-    flex-direction: column;
-     margin: 0 5rem;
+      display: flex;
+      flex-direction: column;
+      margin: 0 5rem;
+      min-height: 76vh ;
     }
 
     .user-chat {
@@ -201,16 +208,16 @@ ui <- fluidPage(
           fluidRow(
             tags$div(
               class = "tooltips",
-              h5("OpenAI Api Key"),
-              tags$span(class = "tooltiptext", "Your secret API key")
+              h5("OpenAI Api Key "),
+              tags$span(class = "tooltiptext", "This key is required to generate alt-text.")
             ),
             textInput("api_key", label = NULL, placeholder = "Enter OpenAI API keys")
           ),
           fluidRow(
             tags$div(
               class = "tooltips",
-              h5("Model"),
-              tags$span(class = "tooltiptext", "Your secret API key")
+              h5("Model "),
+              tags$span(class = "tooltiptext", "Choose the OpenAI model to interpret the uploaded image and R code. Different models may produce slightly different outputs.")
             ),
             div(
               class = "model_dropdown",
@@ -243,32 +250,34 @@ ui <- fluidPage(
                     id = "settings_panel",
                     tags$div(
                       class = "tooltips",
-                      h5("Temperature"),
+                      h5("Temperature "),
                       tags$span(class = "tooltiptext", "Controls the randomness of the output. Lower values make the model more focused and deterministic, producing more predictable results. Higher values make the output more creative and diverse. ")
                     ),
                     sliderInput("temperature", label = NULL, min = 0.00, max = 2.00, value = 1.00, step = 0.1),
                     tags$div(
                       class = "tooltips",
-                      h5("Max Tokens"),
+                      h5("Max Tokens "),
                       tags$span(class = "tooltiptext", "Specifies the maximum number of tokens allowed in the combined input and output. A token can be as short as one character or as long as one word. This limits the length of the model’s response.")
                     ),
                     sliderInput("max_tokens", label = NULL, min = 1, max = 32000, value = 2048),
                     tags$div(
                       class = "tooltips",
-                      h5("Top P"),
+                      h5("Top P "),
                       tags$span(class = "tooltiptext", "Controls the diversity of the output by limiting choices to the top probability mass. Lower values narrow the focus, leading to more deterministic responses.")
                     ),
                     sliderInput("top_p", label = NULL, min = 0.00, max = 1.00, value = 1.00)
                   )
                 )
               )
-            )
+            ),
+            uiOutput("system_description")
           ),
+          br(),
           fluidRow(
             tags$div(
               class = "tooltips",
-              h5("System Instruction"),
-              tags$span(class = "tooltiptext", "Your secret API key")
+              h5("System Instruction "),
+              tags$span(class = "tooltiptext", HTML(paste0("Optional prompt to guide the model's behavior (e.g., tone, focus). This will be appended to the full prompt sent to the model.", "View the full prompt <a href='https://github.com/maliny12/AltTextGenerator/blob/main/prompt.txt' target='_blank'>here</a>.")))
             ),
             textAreaInput("sysinstruct", NULL, height = "80px", placeholder = "Describe desired model behavior (keept it concise, include the context ... )")
           ),
@@ -276,16 +285,16 @@ ui <- fluidPage(
             class = "image-input-row",
             tags$div(
               class = "tooltips",
-              h5("Choose Image"),
-              tags$span(class = "tooltiptext", "Your secret API key")
+              h5("Choose Image "),
+              tags$span(class = "tooltiptext", "Upload an image. The app will use the model's vision capabilities to describe its contents.")
             ),
             fileInput("image_input", label = NULL, accept ="image/png")
           ),
           fluidRow(
             tags$div(
               class = "tooltips",
-              h5("R Code"),
-              tags$span(class = "tooltiptext", "Your secret API key")
+              h5("R Code "),
+              tags$span(class = "tooltiptext", "Provide the R code used to create the image. It helps the model interpret the plot, and BrailleR is used to generate an accessible graphical summary.")
             ),
             textAreaInput("code_input", NULL, height = "80px",
                           placeholder = "aus_temp |>
@@ -444,6 +453,18 @@ server <- function(input, output, session) {
   observeEvent(input$show_setting, {
     toggle(id = "settings_panel", anim = TRUE)
   })
+
+  # Render model description
+
+  output$system_description <- renderUI({
+
+    HTML(paste0("temp:  <span style='color: #2c9373;'>", input$temperature, "</span> &nbsp;  &nbsp;",
+                "tokens: <span style='color: #2c9373;'>", input$max_tokens,  "</span> &nbsp;  &nbsp; ",
+                "top_p: <span style='color: #2c9373;'>", input$top_p , "</span> &nbsp;  &nbsp; "
+                ))
+  })
+
+
 
 
 }
