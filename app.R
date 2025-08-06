@@ -177,7 +177,7 @@ ui <- fluidPage(
       border: 1px solid white;
       background-color: #323232d9;
       border-radius: 10px;
-      width: 120px;
+      width: fit-content;
       align-self: flex-end;
       max-width: 80%;
       margin-top: 1rem;
