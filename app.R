@@ -197,7 +197,10 @@ ui <- fluidPage(
 
   ")),
   tags$head(
-    tags$script(src = "script.js")
+    tags$script(src = "script.js"),
+    includeCSS("www/lightbox.min.css"),
+    includeCSS("www/lightbox.css"),
+    includeScript("www/lightbox.js")
   ),
   fluidRow(
       column(
@@ -211,7 +214,7 @@ ui <- fluidPage(
               h5("OpenAI Api Key "),
               tags$span(class = "tooltiptext", "This key is required to generate alt-text.")
             ),
-            textInput("api_key", label = NULL, placeholder = "Enter OpenAI API keys")
+            passwordInput("api_key", label = NULL, value = "", placeholder = "Enter OpenAI API keys")
           ),
           fluidRow(
             tags$div(
@@ -379,7 +382,6 @@ server <- function(input, output, session) {
       temp = input$temperature,
       max_token = input$max_tokens,
       api_key = input$api_key
-
     )
 
     # Send HTTP request to OpenAI
@@ -434,7 +436,11 @@ server <- function(input, output, session) {
         div(
           strong(source), ":",
           br(),
-          tags$img(src = HTML(formatted_msg), style = "max-width: 200px; max-height: 200px;"),
+          tags$a(
+            href = HTML(formatted_msg),
+            `data-lightbox` = "mygallerly",
+            tags$img(src = HTML(formatted_msg), style = "max-width: 200px; max-height: 200px;"),
+          ),
           br(),
           class = chat_bubble_class
         )
@@ -455,7 +461,6 @@ server <- function(input, output, session) {
   })
 
   # Render model description
-
   output$system_description <- renderUI({
 
     HTML(paste0("temp:  <span style='color: #2c9373;'>", input$temperature, "</span> &nbsp;  &nbsp;",
