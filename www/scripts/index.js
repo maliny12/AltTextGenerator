@@ -24,4 +24,4 @@ $(() => {
         let result = await (await globalThis.webR.evalR("rnorm(100)")).toJs()
         console.log(result);
       })
-  })
+  });

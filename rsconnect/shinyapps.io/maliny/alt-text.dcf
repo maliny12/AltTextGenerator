@@ -5,7 +5,7 @@ account: maliny
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 15140438
-bundleId: 10765150
+bundleId: 10765304
 url: https://maliny.shinyapps.io/alt-text/
-when: 1755060600.60933
-lastSyncTime: 1755060600.60935
+when: 1755065338.00351
+lastSyncTime: 1755065338.00352

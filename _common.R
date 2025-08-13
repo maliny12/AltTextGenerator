@@ -70,8 +70,9 @@ client_responses <- function(body_list){
 
   if (!is.null(inFile)) {
     chat$chat(paste0(sysprompt,client_input), content_image_file(inFile$datapath))
-  } else if (!is.null(body_list$rendered_image)) {
-    chat$chat(paste0(sysprompt,client_input), content_image_file(body_list$rendered_image))
+  # } else if (!is.null(body_list$rendered_image)) {
+  #   chat$chat(paste0(sysprompt,client_input), content_image_file(body_list$rendered_image))
+  # } else {
   } else {
     chat$chat(paste0(sysprompt,client_input))
   }

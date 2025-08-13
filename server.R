@@ -36,36 +36,36 @@ server <- function(input, output, session) {
 
     messages <- append(messages, list(list(role = "user", content = input$user_message)))
 
-    rendered_path <- NULL # Initalise rendered image path
-    # Evaluate the R code
-    if (nchar(input$code_input)) {
-      tmp_file <- tempfile(fileext = ".png")
-      # Attempt to render the plot
-      p <- tryCatch({
-        print(input$code_input)
-        eval(parse(text = input$code_input))
-      }, error = function(x) {
-        #showNotification("Error in rendering the plot: the R code is not self contained.", type = "error")
-        NULL
-      })
-
-      # Only works with `ggplot` object
-      if (inherits(p, "ggplot")) {
-        ggsave(tmp_file, plot = p)
-        rendered_path <- dirname(tmp_file)
-
-        # If the code is self-contained and input image is not provided
-        inFile <- input[["image_input"]]
-        if (is.null(inFile)) {
-          img_data <- dataURI(file = tmp_file, mime = "image/png")
-          chat_data(rbind(chat_data(), data.frame(
-            source = "User",
-            message = img_data,
-            stringsAsFactors = FALSE
-          )))
-        }
-      }
-    }
+    # rendered_path <- NULL # Initalise rendered image path
+    # # Evaluate the R code
+    # if (nchar(input$code_input)) {
+    #   tmp_file <- tempfile(fileext = ".png")
+    #   # Attempt to render the plot
+    #   p <- tryCatch({
+    #     print(input$code_input)
+    #     eval(parse(text = input$code_input))
+    #   }, error = function(x) {
+    #     #showNotification("Error in rendering the plot: the R code is not self contained.", type = "error")
+    #     NULL
+    #   })
+    #
+    #   # Only works with `ggplot` object
+    #   if (inherits(p, "ggplot")) {
+    #     ggsave(tmp_file, plot = p)
+    #     rendered_path <- dirname(tmp_file)
+    #
+    #     # If the code is self-contained and input image is not provided
+    #     inFile <- input[["image_input"]]
+    #     if (is.null(inFile)) {
+    #       img_data <- dataURI(file = tmp_file, mime = "image/png")
+    #       chat_data(rbind(chat_data(), data.frame(
+    #         source = "User",
+    #         message = img_data,
+    #         stringsAsFactors = FALSE
+    #       )))
+    #     }
+    #   }
+    # }
 
 
     body_list <- list(
@@ -73,7 +73,7 @@ server <- function(input, output, session) {
       user_message = input$user_message,
       sysinstruct = input$sysinstruct,
       input_code = input$code_input,
-      rendered_image = rendered_path,
+      #rendered_image = rendered_path,
       input_image = input$image_input,
       input_caption = input$caption,
       top_p = input$top_p,
