@@ -61,14 +61,20 @@ client_responses <- function(body_list){
     client_input <- paste0(body_list$user_message, client_input)
   }
 
-  inFile <- body_list[["input_image"]]
 
-  if (is.null(inFile)) {
-    chat$chat(paste0(sysprompt,client_input))
-  } else {
-    chat$chat(paste0(sysprompt,client_input), content_image_file(inFile$datapath))
+  if (nzchar(body_list$input_caption)) {
+    client_input <- paste0(client_input,"Use the caption to help interpret the image/R code, ensuring the alt-text differs from it.", body_list$input_caption)
   }
 
+  inFile <- body_list[["input_image"]]
+
+  if (!is.null(inFile)) {
+    chat$chat(paste0(sysprompt,client_input), content_image_file(inFile$datapath))
+  } else if (!is.null(body_list$rendered_image)) {
+    chat$chat(paste0(sysprompt,client_input), content_image_file(body_list$rendered_image))
+  } else {
+    chat$chat(paste0(sysprompt,client_input))
+  }
 
 }
 
