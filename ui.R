@@ -187,9 +187,11 @@ ui <- fluidPage(
   ")),
   tags$head(
     tags$script(src = "scripts/index.js"),
+    #tags$script(type = "module", src = "scripts/script.js"),
     includeCSS("www/styles/lightbox.min.css"),
     includeCSS("www/styles/lightbox.css"),
-    includeScript("www/scripts/lightbox.js")
+    includeScript("www/scripts/lightbox.js"),
+    tags$script(src = "https://webr.r-wasm.org/latest/webr.mjs", type = "module")
   ),
   fluidRow(
     column(

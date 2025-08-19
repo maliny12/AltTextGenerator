@@ -12,7 +12,6 @@ sysprompt <- readLines("prompt.txt")
 
 client_responses <- function(body_list){
 
-
   chat <- chat_openai(
     model = body_list$model,
     api_key = body_list$api_key,
@@ -24,7 +23,6 @@ client_responses <- function(body_list){
     )
   )
 
-
     if (nzchar(body_list$input_code)) {
 
     client_input <- " "
@@ -32,10 +30,11 @@ client_responses <- function(body_list){
     # System prompt: 763 char
     tryCatch(
       {
-        if (sum(nchar(capture.output(VI(body_list$input_code)))) >= body_list$max_token) {
+        if (sum(nchar(capture.output(eval(parse(text = paste0("VI({\n", paste(body_list$input_code, collapse = "\n"), "\n})")))))) >= body_list$max_token) {
           client_input <- " "
         } else {
-          client_input <- VI(body_list$input_code)
+          brailleR_output <- eval(parse(text = paste0("VI({\n", paste(body_list$input_code, collapse = "\n"), "\n})")))
+          client_input <- brailleR_output$text
         }
       },
       error = function(e){
@@ -69,12 +68,14 @@ client_responses <- function(body_list){
   inFile <- body_list[["input_image"]]
 
   if (!is.null(inFile)) {
+    client_input <- paste0("BrailleR input: ", client_input, collapse = "")
     chat$chat(paste0(sysprompt,client_input), content_image_file(inFile$datapath))
   # } else if (!is.null(body_list$rendered_image)) {
   #   chat$chat(paste0(sysprompt,client_input), content_image_file(body_list$rendered_image))
   # } else {
   } else {
-    chat$chat(paste0(sysprompt,client_input))
+    client_input <- paste0("BrailleR input: ", client_input, collapse = "")
+    chat$chat(paste0(sysprompt, client_input))
   }
 
 }
