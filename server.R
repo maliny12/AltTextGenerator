@@ -99,7 +99,12 @@ server <- function(input, output, session) {
 
       formatted_msg <- gsub("(\\b[1-3])\\.", "<br>\\1.", message)
 
-      chat_bubble_class <- ifelse(source == "User", "user-chat", "ai-chat")
+      #chat_bubble_class <- ifelse(source == "User", "user-chat", "ai-chat")
+
+      chat_bubble_class <- case_when(source == "User" ~ "user-chat",
+                                     source == "Assistant" ~ "ai-chat",
+                                     source == "Usage" ~ "usage-chat")
+
 
       # Check if message looks like an image data URI
       if (grepl("^data:image/", message)) {

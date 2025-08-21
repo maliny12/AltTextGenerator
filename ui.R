@@ -184,6 +184,17 @@ ui <- fluidPage(
       align-self: flex-start;
     }
 
+    .usage-chat {
+      /* margin-right: 20%; */
+      padding: 1em;
+      border: transparent;
+      background-color: transparent;
+      border-radius: 10px;
+      max-width: 80%;
+      width: fit-content;
+      align-self: flex-start;
+    }
+
   ")),
   tags$head(
     tags$script(src = "scripts/index.js"),

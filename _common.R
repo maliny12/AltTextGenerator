@@ -76,7 +76,7 @@ client_responses <- function(body_list){
     client_input <- paste0("BrailleR input: ", client_input, collapse = "")
     response <- chat$chat(paste0(sysprompt,client_input), content_image_file(inFile$datapath))
     
-    usage <- glue::glue("Usage: Image and BrailleR   Cost: {round(chat$get_cost()[1], 3)}    Token Usage: {sum(chat$get_tokens()[3])[1]}")
+    usage <- glue::glue("Image and BrailleR   Cost: {round(chat$get_cost()[1], 3)}    Token Usage: {sum(chat$get_tokens()[3])[1]}")
     c(response, usage)
   # } else if (!is.null(body_list$rendered_image)) {
   #   chat$chat(paste0(sysprompt,client_input), content_image_file(body_list$rendered_image))
@@ -84,7 +84,7 @@ client_responses <- function(body_list){
   } else {
     client_input <- paste0("BrailleR input: ", client_input, collapse = "")
     response <- chat$chat(paste0(sysprompt, client_input))
-    usage <- glue::glue("Usage: Image and BrailleR   Cost: {round(chat$get_cost()[1], 3)}    Token Usage: {sum(chat$get_tokens()[3])[1]}")
+    usage <- glue::glue("BrailleR   Cost: {round(chat$get_cost()[1], 3)}    Token Usage: {sum(chat$get_tokens()[3])[1]}")
 
     c(response, usage)
   }
