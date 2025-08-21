@@ -12,6 +12,7 @@ sysprompt <- readLines("prompt.txt")
 
 client_responses <- function(body_list){
 
+
   chat <- chat_openai(
     model = body_list$model,
     api_key = body_list$api_key,
@@ -30,10 +31,13 @@ client_responses <- function(body_list){
     # System prompt: 763 char
     tryCatch(
       {
-        if (sum(nchar(capture.output(eval(parse(text = paste0("VI({\n", paste(body_list$input_code, collapse = "\n"), "\n})")))))) >= body_list$max_token) {
+        vi_expression <-  paste0("VI({\n", paste(body_list$input_code, collapse = "\n"), "\n})")
+        brailleR_output <- eval(parse(text = vi_expression))
+
+
+        if (sum(nchar(brailleR_output$text)) >= body_list$max_token) {
           client_input <- " "
         } else {
-          brailleR_output <- eval(parse(text = paste0("VI({\n", paste(body_list$input_code, collapse = "\n"), "\n})")))
           client_input <- brailleR_output$text
         }
       },
@@ -67,15 +71,22 @@ client_responses <- function(body_list){
 
   inFile <- body_list[["input_image"]]
 
+
   if (!is.null(inFile)) {
     client_input <- paste0("BrailleR input: ", client_input, collapse = "")
-    chat$chat(paste0(sysprompt,client_input), content_image_file(inFile$datapath))
+    response <- chat$chat(paste0(sysprompt,client_input), content_image_file(inFile$datapath))
+    
+    usage <- glue::glue("Usage: Image and BrailleR   Cost: {round(chat$get_cost()[1], 3)}    Token Usage: {sum(chat$get_tokens()[3])[1]}")
+    c(response, usage)
   # } else if (!is.null(body_list$rendered_image)) {
   #   chat$chat(paste0(sysprompt,client_input), content_image_file(body_list$rendered_image))
   # } else {
   } else {
     client_input <- paste0("BrailleR input: ", client_input, collapse = "")
-    chat$chat(paste0(sysprompt, client_input))
+    response <- chat$chat(paste0(sysprompt, client_input))
+    usage <- glue::glue("Usage: Image and BrailleR   Cost: {round(chat$get_cost()[1], 3)}    Token Usage: {sum(chat$get_tokens()[3])[1]}")
+
+    c(response, usage)
   }
 
 }

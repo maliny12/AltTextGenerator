@@ -53,9 +53,14 @@ server <- function(input, output, session) {
     response <- client_responses(body_list)
 
     model_response <- data.frame(source = "Assistant",
-                                 message = response,
+                                 message = response[1],
                                  stringsAsFactors = FALSE)
+
+    model_usage <- data.frame(source = "Usage",
+                              message = response[2],
+                              stringsAsFactors = FALSE)
     chat_data(rbind(chat_data(), model_response))
+    chat_data(rbind(chat_data(), model_usage))
 
     enable("send_request")
     updateTextAreaInput(session, "user_message", value = "")
