@@ -277,7 +277,6 @@ ui <- fluidPage(
           ),
           uiOutput("system_description")
         ),
-        br(),
         fluidRow(
           tags$div(
             class = "tooltips",
@@ -301,7 +300,7 @@ ui <- fluidPage(
             h5("Caption"),
             tags$span(class = "tooltiptext", "Provide the caption to the figure. This will be used to help with the alt-text generation, but its content will not be reused" )
           ),
-          textAreaInput("caption", NULL, height = "80px", placeholder = "This figure illustrate ... )")
+          textAreaInput("caption", NULL, height = "80px", placeholder = "This figure illustrate ... ")
         ),
         fluidRow(
           tags$div(
@@ -322,6 +321,13 @@ ui <- fluidPage(
   add_ref_lines() +
   geom_glyph_ribbon()")
         ),
+        fluidRow(
+          div(style = "display: flex; justify-content: center; align-item: center; gap: 10px; flex-wrap: wrap;",
+              actionButton("clear_history", NULL, icon = icon("trash"), class = "btn-custom", title = "Clear Chat"),
+              downloadButton("download_chat", "Save", class = "btn-custom", title = "Download Chat"),
+              actionButton("upload_chat", "Upload", class = "btn-custom", title = "Upload Chat")
+          )
+        )
       )
     ),
     column(

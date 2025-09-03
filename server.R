@@ -2,6 +2,8 @@
 
 server <- function(input, output, session) {
 
+  runjs("$('#file').parent().parent().siblings().removeClass('form-control').attr('hidden','true');")
+
   # output[["image"]] <- renderUI({
   #   if(!is.null(base64())){
   #     tags$div(
@@ -48,7 +50,7 @@ server <- function(input, output, session) {
       api_key = input$api_key
     )
 
-    # Send HTTP request to OpenAI
+    # Send HTTP request to OpenAI with Ellmer
 
     response <- client_responses(body_list)
 
@@ -82,6 +84,16 @@ server <- function(input, output, session) {
     }
   })
 
+  # Delete chat history
+  observeEvent(input$clear_history, {
+    chat_data(data.frame(source = character(0), message = character(0), stringsAsFactors = FALSE))
+  })
+
+
+
+
+
+
   # Render chat history
   output$chat_history <- renderUI({
 
@@ -99,12 +111,12 @@ server <- function(input, output, session) {
 
       formatted_msg <- gsub("(\\b[1-3])\\.", "<br>\\1.", message)
 
-      #chat_bubble_class <- ifelse(source == "User", "user-chat", "ai-chat")
 
       chat_bubble_class <- case_when(source == "User" ~ "user-chat",
                                      source == "Assistant" ~ "ai-chat",
                                      source == "Usage" ~ "usage-chat")
-
+      
+      label <- if (source == "Usage") {source} else {strong(source)}
 
       # Check if message looks like an image data URI
       if (grepl("^data:image/", message)) {
@@ -121,7 +133,7 @@ server <- function(input, output, session) {
         )
       } else {
         div(
-          strong(source), ": ", HTML(formatted_msg),
+          label, ": ", HTML(formatted_msg),
           br(),
           class = chat_bubble_class
         )
@@ -144,8 +156,14 @@ server <- function(input, output, session) {
     ))
   })
 
-
-
+  # Download chat history
+  output$download_chat <- downloadHandler(
+    filename = function() {"chat_history.txt"},
+    content = function(file) {
+      chat_history <- paste(chat_data()$source, chat_data()$message, sep = ": ", collapse = "\n")
+      writeLines(chat_history, file)
+    }
+  )
 
 }
 

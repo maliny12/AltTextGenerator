@@ -1,0 +1,30 @@
+## ----libraries, warning=FALSE, message=FALSE--------------------------------------------------------------------------------------------------------------------
+
+library(forcats)
+library(stringr)
+library(ggridges)
+library(tidyverse)
+library(lubridate)
+library(nycflights13)
+library(colorspace)
+library(Stat2Data)
+library(ggrepel)
+
+
+
+## ----fig-airquality, warning=FALSE, message=FALSE---------------------------------------------------------------------------------------------------------------
+ggplot(mpg, aes(y = cty, x = displ, color = drv, fill = drv)) +
+  geom_point(size = 3, shape = 21) +
+  ylab("fuel economy (mpg)") +
+  xlab("displacement (l)") +
+  scale_color_manual(values=c("#202020", "#E69F00", "#56B4E9"),
+                     name="drive train",
+                     breaks=c("f", "r", "4"),
+                     labels=c("FWD", "RWD", "4WD")) +
+  scale_fill_manual(values=c("#20202080", "#E69F0080", "#56B4E980"),
+                    name="drive train",
+                    breaks=c("f", "r", "4"),
+                    labels=c("FWD", "RWD", "4WD")) +
+  theme(legend.position = c(.7, .8),
+        plot.margin = margin(3, 7, 3, 1.5))
+
