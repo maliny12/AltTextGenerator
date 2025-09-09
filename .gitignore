@@ -9,3 +9,5 @@ environment.env
 venv/
 .Renviron
 .lintr.R
+test.qmd
+test.txt

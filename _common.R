@@ -80,7 +80,7 @@ client_responses <- function(body_list){
                 "Cost: <span style='color: #2c9373;'>", round(chat$get_cost()[1], 3),  "</span> &nbsp;  &nbsp; ",
                 "Token Usage: <span style='color: #2c9373;'>", sum(chat$get_tokens()[3])[1] , "</span> &nbsp;  &nbsp; "
     )
-    
+
     c(response, usage)
   # } else if (!is.null(body_list$rendered_image)) {
   #   chat$chat(paste0(sysprompt,client_input), content_image_file(body_list$rendered_image))
@@ -97,5 +97,8 @@ client_responses <- function(body_list){
   }
 
 }
+
+
+
 
 

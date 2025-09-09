@@ -1,4 +1,4 @@
-## ----libraries, warning=FALSE, message=FALSE--------------------------------------------------------------------------------------------------------------------
+## ----warning=FALSE--------------------------------------------------------------------------------------------------------------
 
 library(forcats)
 library(stringr)
@@ -12,7 +12,8 @@ library(ggrepel)
 
 
 
-## ----fig-airquality, warning=FALSE, message=FALSE---------------------------------------------------------------------------------------------------------------
+
+## ----fig-airquality, warning=FALSE, message=FALSE-------------------------------------------------------------------------------
 ggplot(mpg, aes(y = cty, x = displ, color = drv, fill = drv)) +
   geom_point(size = 3, shape = 21) +
   ylab("fuel economy (mpg)") +

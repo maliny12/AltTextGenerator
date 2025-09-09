@@ -1,8 +1,8 @@
----
-title: test
----
-
-```{r, warning=FALSE}
+#' ---
+#' title: test
+#' ---
+#' 
+## ----warning=FALSE---------------------------------------------------------------------------------------------------------------------
 
 library(forcats)
 library(stringr)
@@ -15,11 +15,10 @@ library(Stat2Data)
 library(ggrepel)
 
 
-```
 
-
-```{r, warning=FALSE, message=FALSE}
-#| label: fig-airquality
+#' 
+#' 
+## ----fig-airquality, warning=FALSE, message=FALSE--------------------------------------------------------------------------------------
 ggplot(mpg, aes(y = cty, x = displ, color = drv, fill = drv)) +
   geom_point(size = 3, shape = 21) +
   ylab("fuel economy (mpg)") +
@@ -34,15 +33,15 @@ ggplot(mpg, aes(y = cty, x = displ, color = drv, fill = drv)) +
                     labels=c("FWD", "RWD", "4WD")) +
   theme(legend.position = c(.7, .8),
         plot.margin = margin(3, 7, 3, 1.5))
-```
 
-@fig-airquality illustrates the relationship between engine displacement (in liters) and fuel economy (in miles per gallon) across different drive train types—Front-Wheel Drive (FWD), Rear-Wheel Drive (RWD), and Four-Wheel Drive (4WD). Overall, there is a clear negative correlation between displacement and fuel economy: as engine displacement increases, fuel economy tends to decrease. This trend reflects the general principle that larger engines consume more fuel, resulting in lower miles per gallon.
-
-The figure above 
-
-
-```{r fig_bla, warning=FALSE, message=FALSE}
-
+#' 
+#' @fig-airquality illustrates the relationship between engine displacement (in liters) and fuel economy (in miles per gallon) across different drive train types—Front-Wheel Drive (FWD), Rear-Wheel Drive (RWD), and Four-Wheel Drive (4WD). Overall, there is a clear negative correlation between displacement and fuel economy: as engine displacement increases, fuel economy tends to decrease. This trend reflects the general principle that larger engines consume more fuel, resulting in lower miles per gallon.
+#' 
+#' The figure above 
+#' 
+#' 
+## --------------------------------------------------------------------------------------------------------------------------------------
+#| label: fig-example
 ggplot(mpg, aes(y = cty, x = displ, color = drv, fill = drv)) +
   geom_point(size = 3, shape = 21) +
   ylab("fuel economy (mpg)") +
@@ -57,6 +56,4 @@ ggplot(mpg, aes(y = cty, x = displ, color = drv, fill = drv)) +
                     labels=c("FWD", "RWD", "4WD")) +
   theme(legend.position = c(.7, .8),
         plot.margin = margin(3, 7, 3, 1.5))
-```
 
-@fig_bla is baka 
