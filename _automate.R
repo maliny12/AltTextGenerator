@@ -1,12 +1,12 @@
-library(knitr)
-library(stringr)
-
 
 extract_ggplot_code <- function(file_path) {
+  # Return: List of a list for each chunk info (chunk label, code, and reference paragraph)
 
   content <- readLines(file_path)
   temp_file <- tempfile(fileext = ".txt")
-  purl(file_path, output = temp_file, documentation = 1) # no documentation just code boundary
+
+
+  knitr::purl(file_path, output = temp_file, documentation = 1) # no documentation just code boundary
 
   # Grab all code chunks from the .txt file
   all_code_chunks <-   parse_code(temp_file)
@@ -18,15 +18,14 @@ extract_ggplot_code <- function(file_path) {
   for (i in seq_along(all_code_chunks)) {
     chunk <- all_code_chunks[[i]]
 
-    if (str_detect(chunk$code, "ggplot|geom")) {
+    if (stringr::str_detect(chunk$code, "ggplot|geom") &  stringr::str_detect(chunk$code, "aes")) {
+
       # If so, find location of the code chunk in the qmd file and
       original_location <- find_chunk_location(content, chunk$chunk_label, chunk$code)
       # Grab the paragraph that references the chunk label (@fig-)
       reference_paragraph <- find_reference_text(content, chunk$chunk_label,
                                                  original_location$start,
                                                  original_location$end)
-
-
 
       chunk_info <- list(
         chunk_label = chunk$chunk_label,
@@ -44,10 +43,11 @@ extract_ggplot_code <- function(file_path) {
 
 }
 
+
+# Helper functions -----------------------------------------------------
+
 # Function to extract all code chunks from a .txt file
 parse_code <- function(purled_content) {
-
-
 
    chunks <- list()
    current_chunk <- NULL
@@ -57,15 +57,18 @@ parse_code <- function(purled_content) {
      line <- purled_lines[i]
      chunk_start_pattern <- "^## ----|^#\\| label:"
 
+
      if (str_detect(line, chunk_start_pattern)){
 
+
        if (str_detect(line, "^## ----")) {
-         chunk_label <- str_extract(line, "(?<=## ----)[^-]+?(?=,|$)")
+         # starts with ## ---- and ends with either , or --
+         chunk_label <- str_extract(line, "(?<=^## ----).*?(?=--|,)")
        } else {
          chunk_label <- str_extract(line, "(?<=#\\| label: ).*")
        }
 
-       if (is.na(chunk_label)){
+       if (is.na(chunk_label) || !nzchar(chunk_label)){
          chunk_label <- paste0("chunk_",length(chunks) +1) # chunk_i
        }
         chunk_label <- str_trim(chunk_label) # Else: chunk_label
@@ -135,7 +138,7 @@ find_chunk_location <- function(content, chunk_label, code) {
             }
             chunk_end <- chunk_end + 1
 
-            return(list(start = start_line, end = end_line))
+            return(list(start = chunk_start, end = chunk_end))
           }
         }
       }

@@ -158,6 +158,38 @@ ui <- fluidPage(
       flex-direction: column;
       margin: 0 5rem;
       min-height: 76vh ;
+      }
+
+    .shiny-spinner-output-container {
+      background-color: #7575751f;
+      border-radius: 10px;
+    }
+
+    .form-control {
+    background-color:  #7575751f !important;
+    border: 1px solid #9b9898bd;
+    }
+
+    .selectize-input.full {
+    background-color: #d9d9d8 !important;
+    }
+
+    .selectize-dropdown {
+    background-color: #d9d9d8 !important;
+    }
+
+
+    .form-control:focus {
+    border-color: #2c9373 !important;
+    }
+
+    .btn-default {
+    background-color: #d9d9d8 !important;
+    }
+
+    #send_request {
+    background-color: #27a786 !important;
+    border: transparent !important;
     }
 
     .user-chat {
@@ -286,6 +318,15 @@ ui <- fluidPage(
           textAreaInput("sysinstruct", NULL, height = "80px", placeholder = "Describe desired model behavior (keept it concise, include the context ... )")
         ),
         fluidRow(
+          div(style = "display: flex; justify-content: center; align-item: center; gap: 10px; flex-wrap: wrap;",
+              actionButton("clear_history", NULL, icon = icon("trash"), class = "btn-custom", title = "Clear Chat"),
+              downloadButton("download_chat", "Save", class = "btn-custom", title = "Download Chat")
+              #fileInputOnlyButton(label =  "Upload", inputId = "upload_chat")
+              # fileInput("file", label = NULL),
+              # tag$button("Upload File", id = "custom_upload_btn")
+          )
+        ),
+        fluidRow(
           class = "image-input-row",
           tags$div(
             class = "tooltips",
@@ -320,13 +361,6 @@ ui <- fluidPage(
   add_glyph_boxes() +
   add_ref_lines() +
   geom_glyph_ribbon()")
-        ),
-        fluidRow(
-          div(style = "display: flex; justify-content: center; align-item: center; gap: 10px; flex-wrap: wrap;",
-              actionButton("clear_history", NULL, icon = icon("trash"), class = "btn-custom", title = "Clear Chat"),
-              downloadButton("download_chat", "Save", class = "btn-custom", title = "Download Chat"),
-              actionButton("upload_chat", "Upload", class = "btn-custom", title = "Upload Chat")
-          )
         )
       )
     ),

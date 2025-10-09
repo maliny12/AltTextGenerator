@@ -92,8 +92,6 @@ server <- function(input, output, session) {
 
 
 
-
-
   # Render chat history
   output$chat_history <- renderUI({
 
@@ -115,7 +113,7 @@ server <- function(input, output, session) {
       chat_bubble_class <- case_when(source == "User" ~ "user-chat",
                                      source == "Assistant" ~ "ai-chat",
                                      source == "Usage" ~ "usage-chat")
-      
+
       label <- if (source == "Usage") {source} else {strong(source)}
 
       # Check if message looks like an image data URI

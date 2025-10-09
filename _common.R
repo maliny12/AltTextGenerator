@@ -12,7 +12,6 @@ sysprompt <- readLines("prompt.txt")
 
 client_responses <- function(body_list){
 
-
   chat <- chat_openai(
     model = body_list$model,
     api_key = body_list$api_key,
@@ -26,17 +25,23 @@ client_responses <- function(body_list){
 
     if (nzchar(body_list$input_code)) {
 
+
     client_input <- " "
     # Token limit : 30000 / 7500 char
     # System prompt: 763 char
     tryCatch(
       {
-        vi_expression <-  paste0("VI({\n", paste(body_list$input_code, collapse = "\n"), "\n})")
-        brailleR_output <- eval(parse(text = vi_expression))
+
+        user_expr <- parse(text = paste(body_list$input_code, collapse = "\n"))
+        #vi_expression <-  paste0("VI({\n", paste(body_list$input_code, collapse = "\n"), "\n})")
+        #brailleR_output <- eval(parse(text = vi_expression))
+        plot_obj <- eval(user_expr)
+
+        brailleR_output <- VI(plot_obj)
 
 
         if (sum(nchar(brailleR_output$text)) >= body_list$max_token) {
-          client_input <- " "
+          client_input <- ""
         } else {
           client_input <- brailleR_output$text
         }
@@ -52,9 +57,9 @@ client_responses <- function(body_list){
     )
 
     # In case BrailleR throws an error
-    if(inherits(client_input, "error")){
+    if(inherits(client_input, "error") || !nzchar(client_input)){
       client_input <- paste0("Interpret this code and use the interpreation to generate alt-text", body_list$input_code)
-    }
+      }
 
     } else {
       client_input <- " "
