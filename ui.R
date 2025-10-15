@@ -330,15 +330,6 @@ ui <- navbarPage("Alt-Text Generator",
                      textAreaInput("sysinstruct", NULL, height = "80px", placeholder = "Describe desired model behavior (keept it concise, include the context ... )")
                    ),
                    fluidRow(
-                     div(style = "display: flex; justify-content: center; align-item: center; gap: 10px; flex-wrap: wrap;",
-                         actionButton("clear_history", NULL, icon = icon("trash"), class = "btn-custom", title = "Clear Chat"),
-                         downloadButton("download_chat", "Save", class = "btn-custom", title = "Download Chat")
-                         #fileInputOnlyButton(label =  "Upload", inputId = "upload_chat")
-                         # fileInput("file", label = NULL),
-                         # tag$button("Upload File", id = "custom_upload_btn")
-                     )
-                   ),
-                   fluidRow(
                      class = "image-input-row",
                      tags$div(
                        class = "tooltips",
@@ -372,7 +363,16 @@ ui <- navbarPage("Alt-Text Generator",
     inherit.aes = FALSE) +
   add_glyph_boxes() +
   add_ref_lines() +
-  geom_glyph_ribbon()")
+  geom_glyph_ribbon()"),
+                     fluidRow(
+                       div(style = "display: flex; justify-content: center; align-item: center; gap: 10px; flex-wrap: wrap;",
+                           actionButton("clear_history", NULL, icon = icon("trash"), class = "btn-custom", title = "Clear Chat"),
+                           downloadButton("download_chat", "Save", class = "btn-custom", title = "Download Chat")
+                           #fileInputOnlyButton(label =  "Upload", inputId = "upload_chat")
+                           # fileInput("file", label = NULL),
+                           # tag$button("Upload File", id = "custom_upload_btn")
+                       )
+                     )
                    )
                  )
                ),
@@ -394,6 +394,7 @@ ui <- navbarPage("Alt-Text Generator",
                )
              )
             ),
+    # -----------------------------------------------------------------------
     tabPanel("Automatic",
              uiOutput("user_manual"),
              uiOutput("button_ui"),

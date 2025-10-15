@@ -163,8 +163,8 @@ server <- function(input, output, session) {
     }
   )
 
-  # Second tab
-  parsed_data <- reactiveVal(NULL)
+  # Second tab ---------------------------------------------------------------------
+  parsed_data <-  reactiveVal(NULL)
   file_uploaded <- reactiveVal(FALSE) # Track if the file is submitted
 
   # Post-submit button rendering
@@ -172,7 +172,9 @@ server <- function(input, output, session) {
     if (file_uploaded()) {
       div(
         style = "position: fixed; bottom: 30px; left: 0; right: 0; text-align: center; z-index: 1000;",
-        actionButton("show_modal", "Upload Another QMD File")
+        actionButton("show_modal", "Upload Another QMD File"),
+        actionButton("regenerate", "Regenerate"),
+        downloadButton("download_altText", "Insert Alt-text")
       )
     }
   })
@@ -181,8 +183,10 @@ server <- function(input, output, session) {
     if (!file_uploaded()) {
       div(
         class = "center-content",
-        p("This app automatically generates alt-text for images to improve accessibility."),
-        actionButton("show_modal", "Upload QMD File")
+        p("Welcome to the Automatic Alt-Text Generator!"),
+        p("Upload your .qmd file, and this app will generate alt-text for each ggplot visualization it contains. All you need is your .qmd file and a valid OpenAI API key. With these, you'll be able to create meaningful alt-text that enhances image accessibility.
+You can also customize the model by choosing a different version or providing custom system instructions. Click the Get Started button below to make your work more accessible!", style = " max-width: 500px; "),
+        actionButton("show_modal", "Get Started")
       )
     }
   })
@@ -203,7 +207,7 @@ server <- function(input, output, session) {
       textInput("text_input", NULL,
                 placeholder = "Describe desired model behavior (keept it concise, include the context ... )"),
       h5("Upload a .qmd file"),
-      fileInput("file_upload", NULL, accept = ".qmd"),
+      fileInput("file_upload", NULL, accept = ".rmd"), # .qmd
 
       footer = tagList(
         actionButton("submit_modal", "Generate Alt-Text"),
@@ -217,11 +221,20 @@ server <- function(input, output, session) {
     req(input$file_upload)
     removeModal()
 
-    result <- parse_qmd_file(input$file_upload$datapath)
+    result <- generate_alt_text(file_path = input$file_upload$datapath,api =  input$api_key)
+    file_uploaded(TRUE)
+    parsed_data(result)
+
+  })
+
+  observeEvent(input$regenerate, {
+    req(input$file_upload)
+    removeModal()
+
+    result <- generate_alt_text(file_path = input$file_upload$datapath,api =  input$api_key)
     parsed_data(result)
     file_uploaded(TRUE)
   })
-
 
   output$results_ui <- renderUI({
     req(parsed_data())
@@ -233,8 +246,10 @@ server <- function(input, output, session) {
                tags$pre(code(results$code[i]))
         ),
         column(6,
-               tags$p(strong("Alt-text: "), results$alt_text[i])
+               tags$p(strong("Alt-text: "), results$response[i])
         ),
+        column(6,tags$p(strong("Chunk label: "), results$chunk_label[i])),
+        column(6,tags$p(strong("Usage: "), results$usage[i])),
         tags$hr()
       )
     })

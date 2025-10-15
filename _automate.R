@@ -1,12 +1,134 @@
+generate_alt_text <- function(file_path = NULL,api = NULL, userinstruct = ""){
+
+  if (is.null(file_path)){
+    stop("Missing file path")
+  }
+
+  if (is.null(api)){
+    stop("Missing Open-AI API key. Information on how to obtain an API key can be found here https://help.openai.com/en/collections/3675931-api")
+  }
+
+  if (!is.character(api)) {
+    stop("API needs to be in a character string.  Information on how to obtain an API key can be found here https://help.openai.com/en/collections/3675931-api")
+  }
+
+
+  content <- extract_ggplot_code(file_path)
+
+  body_list <- list(
+    model = "gpt-4.1",
+    api_key = api,
+    userinstruct = userinstruct,
+    max_token = 2048
+  )
+
+
+  result <- client_responses_auto(body_list , content)
+
+
+  alt_text <- tibble(chunk_label = result$chunk_label,
+                     response = result$response,
+                     usage = result$usage,
+                     code = result$code)
+
+  return(alt_text)
+}
+
+
+client_responses_auto <- function(body_list , content){
+
+  sysprompt <- "You are a researcher tasked with generating one concise variations of alt-text for graphs based on R code, BrailleR output and reference text. Your role involves analyzing textual descriptions (such as BrailleR output), statistical summaries, and context from the reference text to produce clear and informative alt-text. You should naturally describe the chart type, variables on the axes, axis ranges, data mappings (such as color or shape), and any patterns, relationships, or clusters. Include your interpretation of the data where relevant. Do not begin alt-text with phrases like 'Alt-text:' or use labels such as 'Iteration.' If the prompt lacks detail, make reasonable assumptions and note them. Don't provide seperate interpreation for provided R code, reference text or brailleR output."
+
+  chat <- ellmer::chat_openai(
+    model = body_list$model,
+    api_key = body_list$api_key,
+    system_prompt = paste0(body_list$userinstruct,sysprompt)
+  )
+
+
+  output <- data.frame(
+    chunk_label = character(0),
+    response = character(0),
+    usage = character(0),
+    code = character(0)
+  )
+
+
+  for (i in seq_along(content)) {
+    if (nzchar(content[[i]]$chunk_code)) {
+
+      client_input <- " "
+
+      # Token limit : 30000 / 7500 char
+      # System prompt: 763 char
+      tryCatch(
+        {
+
+          user_expr <- parse(text = paste(content[[i]]$chunk_code, collapse = "\n"))
+          # vi_expression <-  paste0("VI({\n", paste(body_list$input_code, collapse = "\n"), "\n})")
+          # brailleR_output <- eval(parse(text = vi_expression))
+          plot_obj <- eval(user_expr)
+
+          brailleR_output <- VI(plot_obj)
+
+
+          if (sum(nchar(brailleR_output$text)) >= body_list$max_token) {
+            client_input <- ""
+          } else {
+            client_input <- brailleR_output$text
+          }
+        },
+        error = function(e){
+          class(client_input) <- "error"
+        }
+      )
+
+
+
+      # In case BrailleR throws an error
+      if(inherits(client_input, "error") || !nzchar(client_input)) {
+        client_input <- paste0("Interpret this code and use the interpreation to generate alt-text", content[[i]]$chunk_code)
+      }
+
+    } else {
+      client_input <- " "
+    }
+
+    client_input <- paste0("BrailleR input: ", client_input, collapse = "")
+
+    if (!is.null(content[[i]]$reference_paragraph)) {
+      reference_text <- paste0("Reference text: ", content[[i]]$reference_paragraph, collapse = "")
+    } else {
+      reference_text <- ""
+    }
+
+    # HTTP request
+    print(paste0("Evaluating ", content[[i]]$chunk_label, "..."))
+    response <- chat$chat(paste0(sysprompt, client_input, reference_text))
+    usage <- paste0("BrailleR",
+                    ", Cummulated cost: ", round(chat$get_cost()[1], 3),
+                    ", Cummulated token usage: ", sum(chat$get_tokens()[3])[1]
+    )
+
+    output[nrow(output) + 1,] <-  list(content[[i]]$chunk_label, response,usage, code = content[[i]]$chunk_code)
+
+
+  }
+
+
+  return(output)
+
+}
+
 
 extract_ggplot_code <- function(file_path) {
   # Return: List of a list for each chunk info (chunk label, code, and reference paragraph)
 
+
   content <- readLines(file_path)
   temp_file <- tempfile(fileext = ".txt")
-
-
   knitr::purl(file_path, output = temp_file, documentation = 1) # no documentation just code boundary
+
 
   # Grab all code chunks from the .txt file
   all_code_chunks <-   parse_code(temp_file)
@@ -18,14 +140,15 @@ extract_ggplot_code <- function(file_path) {
   for (i in seq_along(all_code_chunks)) {
     chunk <- all_code_chunks[[i]]
 
-    if (stringr::str_detect(chunk$code, "ggplot|geom") &  stringr::str_detect(chunk$code, "aes")) {
-
+    if (stringr::str_detect(chunk$code, "ggplot|geom") & stringr::str_detect(chunk$code, "aes")) {
       # If so, find location of the code chunk in the qmd file and
       original_location <- find_chunk_location(content, chunk$chunk_label, chunk$code)
       # Grab the paragraph that references the chunk label (@fig-)
       reference_paragraph <- find_reference_text(content, chunk$chunk_label,
                                                  original_location$start,
                                                  original_location$end)
+
+
 
       chunk_info <- list(
         chunk_label = chunk$chunk_label,
@@ -44,62 +167,58 @@ extract_ggplot_code <- function(file_path) {
 }
 
 
-# Helper functions -----------------------------------------------------
 
-# Function to extract all code chunks from a .txt file
 parse_code <- function(purled_content) {
 
-   chunks <- list()
-   current_chunk <- NULL
-   purled_lines <- readLines(purled_content)
+  chunks <- list()
+  current_chunk <- NULL
+  purled_lines <- readLines(purled_content)
 
-   for (i in seq_along(purled_lines)) {
-     line <- purled_lines[i]
-     chunk_start_pattern <- "^## ----|^#\\| label:"
+  for (i in seq_along(purled_lines)) {
+    line <- purled_lines[i]
+    chunk_start_pattern <- "^## ----|^#\\| label:"
 
+    if (stringr::str_detect(line, chunk_start_pattern)){
 
-     if (str_detect(line, chunk_start_pattern)){
+      if (stringr::str_detect(line, "^## ----")) {
+        # starts with ## ---- and ends with either , or --
+        chunk_label <- stringr::str_extract(line, "(?<=^## ----).*?(?=--|,)")
+      } else {
+        chunk_label <- stringr::str_extract(line, "(?<=#\\| label: ).*")
+      }
 
+      if (is.na(chunk_label)){
+        chunk_label <- paste0("chunk_",length(chunks) +1) # chunk_i
+      }
+      chunk_label <- stringr::str_trim(chunk_label) # Else: chunk_label
 
-       if (str_detect(line, "^## ----")) {
-         # starts with ## ---- and ends with either , or --
-         chunk_label <- str_extract(line, "(?<=^## ----).*?(?=--|,)")
-       } else {
-         chunk_label <- str_extract(line, "(?<=#\\| label: ).*")
-       }
+      if (!is.null(current_chunk)) {
+        chunks[[length(chunks) + 1]] <- current_chunk
+      }
 
-       if (is.na(chunk_label) || !nzchar(chunk_label)){
-         chunk_label <- paste0("chunk_",length(chunks) +1) # chunk_i
-       }
-        chunk_label <- str_trim(chunk_label) # Else: chunk_label
+      # Initialize current chunk
+      current_chunk <- list(
+        chunk_label = chunk_label,
+        code = character()
+      )
+    } else if (!is.null(current_chunk) && !stringr::str_detect(line, "^##")) {
+      # Add all codes until the next chunk starts
+      current_chunk$code <- c(current_chunk$code, line)
+    }
 
-       if (!is.null(current_chunk)) {
-         chunks[[length(chunks) + 1]] <- current_chunk
-       }
+  }
 
-        # Initialize current chunk
-        current_chunk <- list(
-          chunk_label = chunk_label,
-          code = character()
-        )
-     } else if (!is.null(current_chunk) && !str_detect(line, "^##")) {
-       # Add all codes until the next chunk starts
-       current_chunk$code <- c(current_chunk$code, line)
-     }
+  if (!is.null(current_chunk)) {
+    chunks[[length(chunks) + 1]] <- current_chunk
+  }
 
-   }
-
-   if (!is.null(current_chunk)) {
-     chunks[[length(chunks) + 1]] <- current_chunk
-   }
-
-   for (i in seq_along(chunks)) {
-     chunks[[i]]$code <- str_trim(paste0(chunks[[i]]$code, collapse = "\n"))
-   }
+  for (i in seq_along(chunks)) {
+    chunks[[i]]$code <- stringr::str_trim(paste0(chunks[[i]]$code, collapse = "\n"))
+  }
 
   return(chunks)
 
- }
+}
 
 
 find_chunk_location <- function(content, chunk_label, code) {
@@ -110,30 +229,30 @@ find_chunk_location <- function(content, chunk_label, code) {
 
 
   start_pattern <- paste0("^```\\{r.*", chunk_label, "|", "^#\\| label: ", chunk_label)
-  potential_chunk_start <- which(str_detect(content, start_pattern))
+  potential_chunk_start <- which(stringr::str_detect(content, start_pattern))
 
 
   # if there is no chunk label
   if (length(potential_chunk_start) == 0) {
-    all_syntax <- str_split(code, "\n")[[1]]
+    all_syntax <- stringr::str_split(code, "\n")[[1]]
     if (length(all_syntax) > 0){
-      first_line <- str_trim(all_syntax[1])
+      first_line <- stringr::str_trim(all_syntax[1])
 
       # Iterate through the entire document and find the first line
       if (nchar(first_line) > 0) {
         for (i in seq_along(content)){
-          if (str_detect(str_trim(content[i]), fixed(first_line))) { #fixed() to compare literal bytes
+          if (stringr::str_detect(stringr::str_trim(content[i]), stringr::fixed(first_line))) { #fixed() to compare literal bytes
 
             # chunk_start is where "^{r" is
             chunk_start <- i
-            while (chunk_start > 1 && !str_detect(content[chunk_start - 1], "^```\\{r")) {
+            while (chunk_start > 1 && !stringr::str_detect(content[chunk_start - 1], "^```\\{r")) {
               chunk_start <- chunk_start - 1
             }
             chunk_start <- chunk_start - 1
 
             # chunk_end is where "^```" is
             chunk_end <- i
-            while (chunk_end > 1 && !str_detect(content[chunk_end - 1], "^```$")) {
+            while (chunk_end > 1 && !stringr::str_detect(content[chunk_end - 1], "^```$")) {
               chunk_end <- chunk_end + 1
             }
             chunk_end <- chunk_end + 1
@@ -149,7 +268,7 @@ find_chunk_location <- function(content, chunk_label, code) {
 
   # if there is a chunk label
   start_line <- potential_chunk_start[1] - 1
-  chunk_ends <- which(str_detect(content, "^```$"))
+  chunk_ends <- which(stringr::str_detect(content, "^```$"))
   end_line <- chunk_ends[chunk_ends > start_line][1] # grab the first one
 
   if (is.na(end_line)) {
@@ -160,6 +279,7 @@ find_chunk_location <- function(content, chunk_label, code) {
 
 }
 
+
 find_reference_text <- function(content, chunk_label, chunk_start, chunk_end) {
   # content: readLines(".qmd")
   # chunk_label: a single label name
@@ -169,39 +289,42 @@ find_reference_text <- function(content, chunk_label, chunk_start, chunk_end) {
 
   paragraph <- NULL
 
- reference_pattern <- c(
-   paste0("@fig-", chunk_label),
-   paste0("\\{#fig-", chunk_label, "\\}"),
-   paste0("Figure.*", chunk_label),
-   paste0("figure.*", chunk_label),
-   chunk_label
-   # "figure.*above", "figure.*below",
-   # "plot.*above","plot.*below",
-   # "following.*figure", "following.*plot",
-   # "graph.*above", "graph.*below"
- )
+  reference_pattern <- c(
+    paste0("@fig:", chunk_label),
+    paste0("\\{#fig", chunk_label, "\\}"),
+    paste0("Figure.*", chunk_label),
+    paste0("figure.*", chunk_label)
+    # "figure.*above", "figure.*below",
+    # "plot.*above","plot.*below",
+    # "following.*figure", "following.*plot",
+    # "graph.*above", "graph.*below"
+  )
 
 
- for (i in seq_along(content)) {
+  for (i in seq_along(content)) {
 
-   if (i >= chunk_start && i <= chunk_end) next # Skip code chunks
 
-   line <- content[i]
+    if (i >= chunk_start && i <= chunk_end) next # Skip code chunks
 
-   for (p in reference_pattern) {
-     if (str_detect(line, p)) {
+    line <- content[i]
 
-       # Not all paragraph are written in one long line. So a paragraph is defined by white space at both end.
-       paragraph <- extract_paragraph(content, i)
-       break
-     }
-   }
+    for (p in reference_pattern) {
 
- }
 
- return(paragraph)
+      if (stringr::str_detect(line, p)) {
+
+        # Not all paragraphs are written in one long line. So a paragraph is defined by white space at both end.
+        paragraph <- extract_paragraph(content, i)
+        break
+      }
+    }
+
+  }
+
+  return(paragraph)
 
 }
+
 
 extract_paragraph <- function(content, line_number) {
 
@@ -210,21 +333,21 @@ extract_paragraph <- function(content, line_number) {
 
   # go backwards to find paragraph start: stop when we hit white space
   while (start_line > 1 &&
-         !str_detect(content[start_line - 1], "^\\s*$") &&
-         !str_detect(content[start_line - 1], "^#+\\s")) {
+         !stringr::str_detect(content[start_line - 1], "^\\s*$") &&
+         !stringr::str_detect(content[start_line - 1], "^#+\\s")) {
     start_line <- start_line - 1
   }
 
   # go forwards to find paragraph end: stop when we hit white space or beginning of a new code chunk
   while (end_line < length(content) &&
-         !str_detect(content[end_line + 1], "^\\s*$") &&
-         !str_detect(content[end_line + 1], "^#+\\s") &&
-         !str_detect(content[end_line + 1], "^```")) {
+         !stringr::str_detect(content[end_line + 1], "^\\s*$") &&
+         !stringr::str_detect(content[end_line + 1], "^#+\\s") &&
+         !stringr::str_detect(content[end_line + 1], "^```")) {
     end_line <- end_line + 1
   }
 
   paragraph <- paste(content[start_line:end_line], collapse = " ")
-  paragraph <- str_trim(str_squish(paragraph))
+  paragraph <- stringr::str_trim(stringr::str_squish(paragraph))
 
   return(paragraph)
 }

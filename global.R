@@ -8,5 +8,5 @@ library(shinycssloaders)
 library(magick)
 library(bslib)
 source("_common.R")
-
+source("_automate.R")
 
