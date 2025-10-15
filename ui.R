@@ -1,5 +1,5 @@
 
-ui <- fluidPage(
+ui <- navbarPage("Alt-Text Generator",
   useShinyjs(),
   tags$style(HTML("
         #spinner { display: none; margin: 10px auto; }
@@ -227,6 +227,17 @@ ui <- fluidPage(
       align-self: flex-start;
     }
 
+    /* Second Tab */
+    .center-content {
+        height: 80vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+      }
+
+
   ")),
   tags$head(
     tags$script(src = "scripts/index.js"),
@@ -236,121 +247,122 @@ ui <- fluidPage(
     includeScript("www/scripts/lightbox.js"),
     tags$script(src = "https://webr.r-wasm.org/latest/webr.mjs", type = "module")
   ),
-  fluidRow(
-    column(
-      width = 3,
-      div(
-        class = "control-panel",
-        tags$hr(style = "margin-top: 10px; margin-bottom: 20px;"),
-        fluidRow(
-          tags$div(
-            class = "tooltips",
-            h5("OpenAI Api Key "),
-            tags$span(class = "tooltiptext", "This key is required to generate alt-text.")
-          ),
-          passwordInput("api_key", label = NULL, value = "", placeholder = "Enter OpenAI API keys")
-        ),
-        fluidRow(
-          tags$div(
-            class = "tooltips",
-            h5("Model "),
-            tags$span(class = "tooltiptext", "Choose the OpenAI model to interpret the uploaded image and R code. Different models may produce slightly different outputs.")
-          ),
-          div(
-            class = "model_dropdown",
-            fluidRow(
-              style = "display: flex",
-              column(
-                width = 9,
-                div(
-                  selectInput(
-                    "modelselection", NULL,
-                    choices = list(
-                      "gpt-4.1" = "gpt-4.1",
-                      "gpt-4.1-mini" = "gpt-4.1-mini",
-                      "gpt-4.1-nano" = "gpt-4.1-nano"
-                    )
-                  )
-                )
-              ),
-              column(
-                width = 1,
-                div()
-              ),
-              column(
-                width = 2,
-                class = "model-config",
-                style = "float: right; padding-right:0px",
-                actionButton("show_setting", icon = icon("sliders"), label = NULL, style = "width: unset; float: right;"),
-                div(
-                  style="min-width: 300px",
-                  id = "settings_panel",
-                  tags$div(
-                    class = "tooltips",
-                    h5("Temperature "),
-                    tags$span(class = "tooltiptext", "Controls the randomness of the output. Lower values make the model more focused and deterministic, producing more predictable results. Higher values make the output more creative and diverse. ")
-                  ),
-                  sliderInput("temperature", label = NULL, min = 0.00, max = 2.00, value = 1.00, step = 0.1),
-                  tags$div(
-                    class = "tooltips",
-                    h5("Max Tokens "),
-                    tags$span(class = "tooltiptext", "Specifies the maximum number of tokens allowed in the combined input and output. A token can be as short as one character or as long as one word. This limits the length of the model’s response.")
-                  ),
-                  sliderInput("max_tokens", label = NULL, min = 1, max = 32000, value = 2048),
-                  tags$div(
-                    class = "tooltips",
-                    h5("Top P "),
-                    tags$span(class = "tooltiptext", "Controls the diversity of the output by limiting choices to the top probability mass. Lower values narrow the focus, leading to more deterministic responses.")
-                  ),
-                  sliderInput("top_p", label = NULL, min = 0.00, max = 1.00, value = 1.00)
-                )
-              )
-            )
-          ),
-          uiOutput("system_description")
-        ),
-        fluidRow(
-          tags$div(
-            class = "tooltips",
-            h5("System Instruction "),
-            tags$span(class = "tooltiptext", HTML(paste0("Optional prompt to guide the model's behavior (e.g., tone, focus). This will be appended to the full prompt sent to the model.", "View the full prompt <a href='https://github.com/maliny12/AltTextGenerator/blob/main/prompt.txt' target='_blank'>here</a>.")))
-          ),
-          textAreaInput("sysinstruct", NULL, height = "80px", placeholder = "Describe desired model behavior (keept it concise, include the context ... )")
-        ),
-        fluidRow(
-          div(style = "display: flex; justify-content: center; align-item: center; gap: 10px; flex-wrap: wrap;",
-              actionButton("clear_history", NULL, icon = icon("trash"), class = "btn-custom", title = "Clear Chat"),
-              downloadButton("download_chat", "Save", class = "btn-custom", title = "Download Chat")
-              #fileInputOnlyButton(label =  "Upload", inputId = "upload_chat")
-              # fileInput("file", label = NULL),
-              # tag$button("Upload File", id = "custom_upload_btn")
-          )
-        ),
-        fluidRow(
-          class = "image-input-row",
-          tags$div(
-            class = "tooltips",
-            h5("Choose Image "),
-            tags$span(class = "tooltiptext", "Upload an image. The app will use the model's vision capabilities to describe its contents.")
-          ),
-          fileInput("image_input", label = NULL, accept ="image/png")
-        ),
-        fluidRow(
-          tags$div(
-            class = "tooltips",
-            h5("Caption"),
-            tags$span(class = "tooltiptext", "Provide the caption to the figure. This will be used to help with the alt-text generation, but its content will not be reused" )
-          ),
-          textAreaInput("caption", NULL, height = "80px", placeholder = "This figure illustrate ... ")
-        ),
-        fluidRow(
-          tags$div(
-            class = "tooltips",
-            h5("R Code "),
-            tags$span(class = "tooltiptext", "Provide the R code used to create the image. It helps the model interpret the plot, and BrailleR is used to generate an accessible graphical summary.")
-          ),
-          textAreaInput("code_input", NULL, height = "80px",
-                        placeholder = "aus_temp |>
+  tabPanel("Manual",
+             fluidRow(
+               column(
+                 width = 3,
+                 div(
+                   class = "control-panel",
+                   tags$hr(style = "margin-top: 10px; margin-bottom: 20px;"),
+                   fluidRow(
+                     tags$div(
+                       class = "tooltips",
+                       h5("OpenAI Api Key "),
+                       tags$span(class = "tooltiptext", "This key is required to generate alt-text.")
+                     ),
+                     passwordInput("api_key", label = NULL, value = "", placeholder = "Enter OpenAI API keys")
+                   ),
+                   fluidRow(
+                     tags$div(
+                       class = "tooltips",
+                       h5("Model "),
+                       tags$span(class = "tooltiptext", "Choose the OpenAI model to interpret the uploaded image and R code. Different models may produce slightly different outputs.")
+                     ),
+                     div(
+                       class = "model_dropdown",
+                       fluidRow(
+                         style = "display: flex",
+                         column(
+                           width = 9,
+                           div(
+                             selectInput(
+                               "modelselection", NULL,
+                               choices = list(
+                                 "gpt-4.1" = "gpt-4.1",
+                                 "gpt-4.1-mini" = "gpt-4.1-mini",
+                                 "gpt-4.1-nano" = "gpt-4.1-nano"
+                               )
+                             )
+                           )
+                         ),
+                         column(
+                           width = 1,
+                           div()
+                         ),
+                         column(
+                           width = 2,
+                           class = "model-config",
+                           style = "float: right; padding-right:0px",
+                           actionButton("show_setting", icon = icon("sliders"), label = NULL, style = "width: unset; float: right;"),
+                           div(
+                             style="min-width: 300px",
+                             id = "settings_panel",
+                             tags$div(
+                               class = "tooltips",
+                               h5("Temperature "),
+                               tags$span(class = "tooltiptext", "Controls the randomness of the output. Lower values make the model more focused and deterministic, producing more predictable results. Higher values make the output more creative and diverse. ")
+                             ),
+                             sliderInput("temperature", label = NULL, min = 0.00, max = 2.00, value = 1.00, step = 0.1),
+                             tags$div(
+                               class = "tooltips",
+                               h5("Max Tokens "),
+                               tags$span(class = "tooltiptext", "Specifies the maximum number of tokens allowed in the combined input and output. A token can be as short as one character or as long as one word. This limits the length of the model’s response.")
+                             ),
+                             sliderInput("max_tokens", label = NULL, min = 1, max = 32000, value = 2048),
+                             tags$div(
+                               class = "tooltips",
+                               h5("Top P "),
+                               tags$span(class = "tooltiptext", "Controls the diversity of the output by limiting choices to the top probability mass. Lower values narrow the focus, leading to more deterministic responses.")
+                             ),
+                             sliderInput("top_p", label = NULL, min = 0.00, max = 1.00, value = 1.00)
+                           )
+                         )
+                       )
+                     ),
+                     uiOutput("system_description")
+                   ),
+                   fluidRow(
+                     tags$div(
+                       class = "tooltips",
+                       h5("System Instruction "),
+                       tags$span(class = "tooltiptext", HTML(paste0("Optional prompt to guide the model's behavior (e.g., tone, focus). This will be appended to the full prompt sent to the model.", "View the full prompt <a href='https://github.com/maliny12/AltTextGenerator/blob/main/prompt.txt' target='_blank'>here</a>.")))
+                     ),
+                     textAreaInput("sysinstruct", NULL, height = "80px", placeholder = "Describe desired model behavior (keept it concise, include the context ... )")
+                   ),
+                   fluidRow(
+                     div(style = "display: flex; justify-content: center; align-item: center; gap: 10px; flex-wrap: wrap;",
+                         actionButton("clear_history", NULL, icon = icon("trash"), class = "btn-custom", title = "Clear Chat"),
+                         downloadButton("download_chat", "Save", class = "btn-custom", title = "Download Chat")
+                         #fileInputOnlyButton(label =  "Upload", inputId = "upload_chat")
+                         # fileInput("file", label = NULL),
+                         # tag$button("Upload File", id = "custom_upload_btn")
+                     )
+                   ),
+                   fluidRow(
+                     class = "image-input-row",
+                     tags$div(
+                       class = "tooltips",
+                       h5("Choose Image "),
+                       tags$span(class = "tooltiptext", "Upload an image. The app will use the model's vision capabilities to describe its contents.")
+                     ),
+                     fileInput("image_input", label = NULL, accept ="image/png")
+                   ),
+                   fluidRow(
+                     tags$div(
+                       class = "tooltips",
+                       h5("Caption"),
+                       tags$span(class = "tooltiptext", "Provide the caption to the figure. This will be used to help with the alt-text generation, but its content will not be reused" )
+                     ),
+                     textAreaInput("caption", NULL, height = "80px", placeholder = "This figure illustrate ... ")
+                   ),
+                   fluidRow(
+                     tags$div(
+                       class = "tooltips",
+                       h5("R Code "),
+                       tags$span(class = "tooltiptext", "Provide the R code used to create the image. It helps the model interpret the plot, and BrailleR is used to generate an accessible graphical summary.")
+                     ),
+                     textAreaInput("code_input", NULL, height = "80px",
+                                   placeholder = "aus_temp |>
   ggplot(aes(
     x_major = long, y_major = lat,
     x_minor = month, ymin_minor = tmin,
@@ -361,26 +373,33 @@ ui <- fluidPage(
   add_glyph_boxes() +
   add_ref_lines() +
   geom_glyph_ribbon()")
-        )
-      )
-    ),
-    column(
-      width = 9,
-      fluidRow(
-        div(
-          class = "main-chat-panel",
-          h3("Alt-Text Generator"),
-          withSpinner(uiOutput("chat_history")),
-          div(id = "spinner", class = "spinner-border", role = "status"),
-          tags$hr(),
-        )
-      ),
-      fluidRow(
-        column(11, textAreaInput("user_message",label = NULL,  placeholder = "Chat with your prompt...", width = "100%")),
-        column(1, actionButton("send_request",label = NULL , icon = icon("paper-plane"), class = "button"))
-      )
-    )
-  )
+                   )
+                 )
+               ),
+               column(
+                 width = 9,
+                 fluidRow(
+                   div(
+                     class = "main-chat-panel",
+                     #h3("Alt-Text Generator"),
+                     withSpinner(uiOutput("chat_history")),
+                     div(id = "spinner", class = "spinner-border", role = "status"),
+                     tags$hr(),
+                   )
+                 ),
+                 fluidRow(
+                   column(11, textAreaInput("user_message",label = NULL,  placeholder = "Chat with your prompt...", width = "100%")),
+                   column(1, actionButton("send_request",label = NULL , icon = icon("paper-plane"), class = "button"))
+                 )
+               )
+             )
+            ),
+    tabPanel("Automatic",
+             uiOutput("user_manual"),
+             uiOutput("button_ui"),
+             uiOutput("results_ui")
+             )
+
 )
 
 
