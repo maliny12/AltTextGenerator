@@ -31,13 +31,15 @@ generate_alt_text <- function(file_path = NULL,api = NULL, userinstruct = ""){
                      usage = result$usage,
                      code = result$code)
 
+
+
   return(alt_text)
 }
 
 
-client_responses_auto <- function(body_list , content){
+client_responses_auto <- function(body_list , content) {
 
-  sysprompt <- "You are a researcher tasked with generating one concise variations of alt-text for graphs based on R code, BrailleR output and reference text. Your role involves analyzing textual descriptions (such as BrailleR output), statistical summaries, and context from the reference text to produce clear and informative alt-text. You should naturally describe the chart type, variables on the axes, axis ranges, data mappings (such as color or shape), and any patterns, relationships, or clusters. Include your interpretation of the data where relevant. Do not begin alt-text with phrases like 'Alt-text:' or use labels such as 'Iteration.' If the prompt lacks detail, make reasonable assumptions and note them. Don't provide seperate interpreation for provided R code, reference text or brailleR output."
+  sysprompt <- "You are a researcher tasked with generating one concise variations of alt-text for graphs based on R code, BrailleR output, reference text, figure caption and alternative text. Your role involves analyzing textual descriptions (such as BrailleR output), statistical summaries, and context from the reference text to produce clear and informative alt-text. If provided, please use the figure caption and alt text as context but do not repeat information. You should naturally describe the chart type, variables on the axes, axis ranges, data mappings (such as color or shape), and any patterns, relationships, or clusters. Include your interpretation of the data where relevant. Do not begin alt-text with phrases like 'Alt-text:' or use labels such as 'Iteration.' If the prompt lacks detail, make reasonable assumptions and note them. Don't provide seperate interpreation for provided R code, reference text or brailleR output."
 
   chat <- ellmer::chat_openai(
     model = body_list$model,
@@ -96,15 +98,29 @@ client_responses_auto <- function(body_list , content){
 
     client_input <- paste0("BrailleR input: ", client_input, collapse = "")
 
+    # Prepare reference text, fig caption and alt text
+
     if (!is.null(content[[i]]$reference_paragraph)) {
       reference_text <- paste0("Reference text: ", content[[i]]$reference_paragraph, collapse = "")
     } else {
       reference_text <- ""
     }
 
+    if (!is.na(content[[i]]$alt_text)) {
+      alt_text <- paste0("Alt text: ", content[[i]]$alt_text, collapse = "")
+    } else {
+      alt_text <- ""
+    }
+
+    if (!is.na(content[[i]]$fig_cap)) {
+      fig_cap <- paste0("Figure caption: ", content[[i]]$fig_cap, collapse = "")
+    } else {
+      fig_cap <- ""
+    }
+
     # HTTP request
     print(paste0("Evaluating ", content[[i]]$chunk_label, "..."))
-    response <- chat$chat(paste0(sysprompt, client_input, reference_text))
+    response <- chat$chat(paste0(sysprompt, client_input, reference_text, alt_text, fig_cap))
     usage <- paste0("BrailleR",
                     ", Cummulated cost: ", round(chat$get_cost()[1], 3),
                     ", Cummulated token usage: ", sum(chat$get_tokens()[3])[1]
@@ -152,6 +168,8 @@ extract_ggplot_code <- function(file_path) {
 
       chunk_info <- list(
         chunk_label = chunk$chunk_label,
+        alt_text = chunk$alt_text,
+        fig_cap = chunk$fig_cap,
         chunk_code = chunk$code,
         reference_paragraph = reference_paragraph
       )
@@ -160,6 +178,7 @@ extract_ggplot_code <- function(file_path) {
     }
 
   }
+
 
   unlink(temp_file)
   return(results)
@@ -176,21 +195,42 @@ parse_code <- function(purled_content) {
 
   for (i in seq_along(purled_lines)) {
     line <- purled_lines[i]
-    chunk_start_pattern <- "^## ----|^#\\| label:"
+
+    chunk_start_pattern <- "^## ----"
 
     if (stringr::str_detect(line, chunk_start_pattern)){
 
-      if (stringr::str_detect(line, "^## ----")) {
-        # starts with ## ---- and ends with either , or --
-        chunk_label <- stringr::str_extract(line, "(?<=^## ----).*?(?=--|,)")
+      if (stringr::str_detect(line, "## ---------------------------------------------------------------------------------------------")) {
+        # QMD style with #| label: instead of inline
+
+        #chunk_label <- stringr::str_extract(line, "(?<=#\\| label: ).*")
+        #alt_text <- stringr::str_extract(line, "(?<=#\\| fig-alt: ).*")
+        #fig_cap <- stringr::str_extract(line, "(?<=#\\| fig-cap: ).*")
+
+        chunk_label <- NA # Will be extracted from code
+        alt_text <- NA  # Will be extracted from code
+        fig_cap <- NA  # Will be extracted from code
+        is_qmd <- TRUE
+
       } else {
-        chunk_label <- stringr::str_extract(line, "(?<=#\\| label: ).*")
+
+        # RMD style
+        chunk_label <- stringr::str_extract(line, "(?<=^## ----).*?(?=--|,)") # starts with ## ---- and ends with either , or --
+        alt_text <- stringr::str_match(line, 'fig\\.alt="([^"]*)"')[,2]
+        fig_cap <- stringr::str_match(line, 'fig\\.cap="([^"]*)"')[,2]
+        is_qmd <- FALSE
+
       }
 
+      # Chunk label: either chunk_i or the provided chunk label
       if (is.na(chunk_label)){
         chunk_label <- paste0("chunk_",length(chunks) +1) # chunk_i
       }
       chunk_label <- stringr::str_trim(chunk_label) # Else: chunk_label
+
+      alt_text <- altText_figCap_processing(alt_text, fig_cap)[1]
+      fig_cap <- altText_figCap_processing(alt_text, fig_cap)[2]
+
 
       if (!is.null(current_chunk)) {
         chunks[[length(chunks) + 1]] <- current_chunk
@@ -199,6 +239,9 @@ parse_code <- function(purled_content) {
       # Initialize current chunk
       current_chunk <- list(
         chunk_label = chunk_label,
+        alt_text = alt_text,
+        fig_cap = fig_cap,
+        is_qmd = is_qmd,
         code = character()
       )
     } else if (!is.null(current_chunk) && !stringr::str_detect(line, "^##")) {
@@ -214,7 +257,32 @@ parse_code <- function(purled_content) {
 
   for (i in seq_along(chunks)) {
     chunks[[i]]$code <- stringr::str_trim(paste0(chunks[[i]]$code, collapse = "\n"))
+
+    # Extract chunk_label, alt-text and fig-cap for QMD style
+    if (chunks[[i]]$is_qmd) {
+
+      # Chunk_label is either chunk_i or the given chunk_label
+      chunk_label <- str_match(chunks[[i]]$code, "#\\|\\s*label:\\s*([^\\n]+)")[, 2]
+      if (is.na(chunk_label)) {
+        chunk_label <- paste0("chunk_", i) # chunk_i
+      }
+
+      alt_text <- stringr::str_match(chunks[[i]]$code, "#\\|\\s*fig-alt:\\s*([^\\n]+)")[, 2]
+      fig_cap <- stringr::str_match(chunks[[i]]$code, "#\\|\\s*fig-cap:\\s*([^\\n]+)")[, 2]
+
+      # Remove chunk-label, fig.cap and alt-text from the code (everything that starts with #| and ends with \n)
+      chunks[[i]]$code <- stringr::str_remove_all(chunks[[i]]$code, regex("^#\\|.*\\n", multiline = TRUE))
+
+
+      # ------------
+      chunks[[i]]$chunk_label <- chunk_label
+      chunks[[i]]$alt_text <- altText_figCap_processing(alt_text, fig_cap)[1]
+      chunks[[i]]$fig_cap <- altText_figCap_processing(alt_text, fig_cap)[2]
+
+    }
+
   }
+
 
   return(chunks)
 
@@ -290,6 +358,7 @@ find_reference_text <- function(content, chunk_label, chunk_start, chunk_end) {
   paragraph <- NULL
 
   reference_pattern <- c(
+    paste0("@fig-", chunk_label),
     paste0("@fig:", chunk_label),
     paste0("\\{#fig", chunk_label, "\\}"),
     paste0("Figure.*", chunk_label),
@@ -352,6 +421,22 @@ extract_paragraph <- function(content, line_number) {
   return(paragraph)
 }
 
+
+altText_figCap_processing <- function(alt_text, fig_cap) {
+  # Alt text: either NA or the given alt-text (minimum length is 40 chars long)
+  if (is.na(alt_text) || nchar(alt_text) < 40){
+    alt_text <- NA
+  }
+  alt_text <- stringr::str_trim(alt_text) # Else: the given alt-text
+
+  # Fig caption: either NA or the given fig caption (minimum length is 40 chars long)
+  if (is.na(fig_cap) || nchar(fig_cap) < 40) {
+    fig_cap <- NA
+  }
+  fig_cap <- stringr::str_trim(fig_cap) # Else: the given fig.cap
+
+  return(list(alt_text, fig_cap))
+}
 
 
 
