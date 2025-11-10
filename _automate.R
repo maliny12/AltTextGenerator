@@ -31,8 +31,10 @@ generate_alt_text <- function(file_path = NULL,api = NULL, userinstruct = ""){
                      response = result$response,
                      provided_alttext = result$provided_alttext,
                      usage = result$usage,
-                     code = result$code)
-
+                     code = result$code,
+                     start_line = result$start_line,
+                     end_line = result$end_line,
+                     newline_style = result$newline_style)
 
 
   return(alt_text)
@@ -57,7 +59,10 @@ client_responses_auto <- function(body_list , content) {
     response = character(0),
     provided_alttext = character(0),
     usage = character(0),
-    code = character(0)
+    code = character(0),
+    start_line = numeric(0),
+    end_line = numeric(0),
+    newline_style = logical(0)
   )
 
 
@@ -126,13 +131,21 @@ client_responses_auto <- function(body_list , content) {
     # HTTP request
     print(paste0("Evaluating ", content[[i]]$chunk_label, "..."))
 
-    response <- chat$chat(paste0(sysprompt, client_input, reference_text, alt_text, fig_cap))
+    response <- chat$chat(paste0(client_input, reference_text, alt_text, fig_cap))
     usage <- paste0("BrailleR",
                     ", Cummulated cost: ", round(chat$get_cost()[1], 3),
                     ", Cummulated token usage: ", sum(chat$get_tokens()[3])[1]
     )
 
-    output[nrow(output) + 1,] <-  list(content[[i]]$chunk_label, response, content[[i]]$alt_text, usage, code = content[[i]]$chunk_code)
+    output[nrow(output) + 1,] <-  list(chunk_label = content[[i]]$chunk_label,
+                                       response = response,
+                                       provided_alttext = content[[i]]$alt_text,
+                                       usage = usage,
+                                       code = content[[i]]$chunk_code,
+                                       start_line = content[[i]]$start_line,
+                                       end_line = content[[i]]$end_line,
+                                       newline_style = content[[i]]$newline_style
+                                       )
 
 
   }
@@ -177,7 +190,10 @@ extract_ggplot_code <- function(file_path) {
         alt_text = chunk$alt_text,
         fig_cap = chunk$fig_cap,
         chunk_code = chunk$code,
-        reference_paragraph = reference_paragraph
+        reference_paragraph = reference_paragraph,
+        start_line = original_location$start,
+        end_line = original_location$end,
+        newline_style = chunk$newline_style
       )
 
       results[[length(results) + 1]] <- chunk_info
@@ -216,7 +232,7 @@ parse_code <- function(purled_content) {
         chunk_label <- NA # Will be extracted from code
         alt_text <- NA  # Will be extracted from code
         fig_cap <- NA  # Will be extracted from code
-        is_qmd <- TRUE
+        newline_style <- TRUE
 
       } else {
 
@@ -224,7 +240,7 @@ parse_code <- function(purled_content) {
         chunk_label <- stringr::str_extract(line, "(?<=^## ----).*?(?=--|,)") # starts with ## ---- and ends with either , or --
         alt_text <- stringr::str_match(line, 'fig\\.alt="([^"]*)"')[,2]
         fig_cap <- stringr::str_match(line, 'fig\\.cap="([^"]*)"')[,2]
-        is_qmd <- FALSE
+        newline_style <- FALSE
 
       }
 
@@ -247,7 +263,7 @@ parse_code <- function(purled_content) {
         chunk_label = chunk_label,
         alt_text = alt_text,
         fig_cap = fig_cap,
-        is_qmd = is_qmd,
+        newline_style = newline_style,
         code = character()
       )
     } else if (!is.null(current_chunk) && !stringr::str_detect(line, "^##")) {
@@ -265,7 +281,7 @@ parse_code <- function(purled_content) {
     chunks[[i]]$code <- stringr::str_trim(paste0(chunks[[i]]$code, collapse = "\n"))
 
     # Extract chunk_label, alt-text and fig-cap for QMD style
-    if (chunks[[i]]$is_qmd) {
+    if (chunks[[i]]$newline_style) {
 
       # Chunk_label is either chunk_i or the given chunk_label
       chunk_label <- str_match(chunks[[i]]$code, "#\\|\\s*label:\\s*([^\\n]+)")[, 2]
@@ -443,6 +459,53 @@ altText_figCap_processing <- function(alt_text, fig_cap) {
 
   return(list(alt_text, fig_cap))
 }
+
+
+insert_altText <- function(file_path, result, name_to) {
+
+  lines <- readLines(file_path)
+  adjust_position <- 0
+
+  for (i in seq_len(nrow(result))) {
+
+    start <- result$start_line[i] + adjust_position
+    end <- result$end_line[i] + adjust_position
+    alt_text <- result$response[i]
+    provided_alttext <- result$provided_alttext[i]
+    newline_style <- result$newline_style[i]
+
+
+    # Always favor the suggest alt-text (since the provided alt-text is used to generate the suggest alt-text)
+    if (newline_style) {
+
+      alt_line <- grep("^#\\|\\s*fig-alt:", lines[start:end])
+      if (length(alt_line) > 0) {
+        # Update existing alt-text
+        lines[start + alt_line - 1] <- paste0("#| fig-alt: ", alt_text)
+      } else {
+        lines <- append(lines, paste0("#| fig-alt: ", alt_text), after = start)
+        # Since we are appending a new line, we need to adjust the start/end position of the new chunk by 1
+        adjust_position <- adjust_position + 1
+      }
+    }  else {
+      # Inline style
+      header <- lines[start + 1] # Start position does not contain the inline for some reason
+      if (grepl("fig\\.alt\\s*=", header)) {
+        # Update existing fig.alt
+        header <- sub('fig\\.alt\\s*=\\s*"[^"]*"', paste0('fig.alt="', alt_text, '"'), header)
+      } else {
+        # Insert fig.alt before closing }
+        header <- sub("\\}$", paste0(', fig.alt="', alt_text, '"}'), header)
+      }
+      lines[start + 1] <- header
+
+    }
+  }
+
+  writeLines(lines, name_to)
+
+}
+
 
 
 

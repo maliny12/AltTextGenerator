@@ -257,6 +257,25 @@ You can also customize the model by choosing a different version or providing cu
     do.call(tagList, output_list)
   })
 
+
+  output$download_altText <- downloadHandler(
+    filename = function() {
+      paste0(tools::file_path_sans_ext(input$file_upload$name), "_with_alttext.qmd")
+    },
+    content = function(file) {
+      req(parsed_data())
+      results <- parsed_data()
+
+      lines <- insert_altText(
+        file_path = input$file_upload$datapath,
+        result = results,
+        name_to = file
+      )
+    }
+
+
+  )
+
 }
 
 
