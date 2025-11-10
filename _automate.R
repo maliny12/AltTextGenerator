@@ -26,8 +26,10 @@ generate_alt_text <- function(file_path = NULL,api = NULL, userinstruct = ""){
   result <- client_responses_auto(body_list , content)
 
 
+
   alt_text <- tibble(chunk_label = result$chunk_label,
                      response = result$response,
+                     provided_alttext = result$provided_alttext,
                      usage = result$usage,
                      code = result$code)
 
@@ -38,6 +40,8 @@ generate_alt_text <- function(file_path = NULL,api = NULL, userinstruct = ""){
 
 
 client_responses_auto <- function(body_list , content) {
+
+
 
   sysprompt <- "You are a researcher tasked with generating one concise variations of alt-text for graphs based on R code, BrailleR output, reference text, figure caption and alternative text. Your role involves analyzing textual descriptions (such as BrailleR output), statistical summaries, and context from the reference text to produce clear and informative alt-text. If provided, please use the figure caption and alt text as context but do not repeat information. You should naturally describe the chart type, variables on the axes, axis ranges, data mappings (such as color or shape), and any patterns, relationships, or clusters. Include your interpretation of the data where relevant. Do not begin alt-text with phrases like 'Alt-text:' or use labels such as 'Iteration.' If the prompt lacks detail, make reasonable assumptions and note them. Don't provide seperate interpreation for provided R code, reference text or brailleR output."
 
@@ -51,6 +55,7 @@ client_responses_auto <- function(body_list , content) {
   output <- data.frame(
     chunk_label = character(0),
     response = character(0),
+    provided_alttext = character(0),
     usage = character(0),
     code = character(0)
   )
@@ -120,13 +125,14 @@ client_responses_auto <- function(body_list , content) {
 
     # HTTP request
     print(paste0("Evaluating ", content[[i]]$chunk_label, "..."))
+
     response <- chat$chat(paste0(sysprompt, client_input, reference_text, alt_text, fig_cap))
     usage <- paste0("BrailleR",
                     ", Cummulated cost: ", round(chat$get_cost()[1], 3),
                     ", Cummulated token usage: ", sum(chat$get_tokens()[3])[1]
     )
 
-    output[nrow(output) + 1,] <-  list(content[[i]]$chunk_label, response,usage, code = content[[i]]$chunk_code)
+    output[nrow(output) + 1,] <-  list(content[[i]]$chunk_label, response, content[[i]]$alt_text, usage, code = content[[i]]$chunk_code)
 
 
   }

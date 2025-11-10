@@ -206,8 +206,8 @@ You can also customize the model by choosing a different version or providing cu
       h5("System Instruction"),
       textInput("text_input", NULL,
                 placeholder = "Describe desired model behavior (keept it concise, include the context ... )"),
-      h5("Upload a .qmd file"),
-      fileInput("file_upload", NULL, accept = ".rmd"), # .qmd
+      h5("Upload .qmd or .Rmd files"),
+      fileInput("file_upload", NULL, accept = c(".qmd", ".rmd")), # .qmd
 
       footer = tagList(
         actionButton("submit_modal", "Generate Alt-Text"),
@@ -231,6 +231,7 @@ You can also customize the model by choosing a different version or providing cu
     req(input$file_upload)
     removeModal()
 
+
     result <- generate_alt_text(file_path = input$file_upload$datapath,api =  input$api_key)
     parsed_data(result)
     file_uploaded(TRUE)
@@ -245,9 +246,8 @@ You can also customize the model by choosing a different version or providing cu
         column(6,
                tags$pre(code(results$code[i]))
         ),
-        column(6,
-               tags$p(strong("Alt-text: "), results$response[i])
-        ),
+        column(6,tags$p(strong("Suggested Alt-text: "), results$response[i])),
+        column(6,tags$p(strong("Provided Alt-text: "), results$provided_alttext[i])),
         column(6,tags$p(strong("Chunk label: "), results$chunk_label[i])),
         column(6,tags$p(strong("Usage: "), results$usage[i])),
         tags$hr()
@@ -258,6 +258,8 @@ You can also customize the model by choosing a different version or providing cu
   })
 
 }
+
+
 
 
 

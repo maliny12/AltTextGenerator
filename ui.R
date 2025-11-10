@@ -235,7 +235,16 @@ ui <- navbarPage("Alt-Text Generator",
         justify-content: center;
         align-items: center;
         text-align: center;
-      }
+    }
+
+
+   #results_ui {
+       max-height: 85vh;
+   }
+
+   pre {
+     max-height: 42vh;
+   }
 
 
   ")),
@@ -398,7 +407,7 @@ ui <- navbarPage("Alt-Text Generator",
     tabPanel("Automatic",
              uiOutput("user_manual"),
              uiOutput("button_ui"),
-             uiOutput("results_ui")
+             withSpinner(uiOutput("results_ui"))
              )
 
 )
